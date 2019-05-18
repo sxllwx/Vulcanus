@@ -49,7 +49,7 @@ type simpleDeque struct {
 	stop <-chan struct{}
 }
 
-func New(stop <-chan struct{}) *simpleDeque {
+func New(stop <-chan struct{}) Interface {
 
 	q := &simpleDeque{
 		stop: stop,

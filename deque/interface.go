@@ -14,4 +14,3 @@ type Interface interface {
 	// ack the object
 	Done(interface{}) error
 }
-
