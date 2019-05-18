@@ -1,6 +1,9 @@
 package deque
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"sync"
 )
 
@@ -67,6 +70,55 @@ func (q *simpleDeque) Len() (int, error) {
 		return 0, err
 	}
 	return len(q.queue), nil
+}
+
+type Data struct {
+	Q []interface{} `json:"Q"`
+	D []interface{} `json:"D"`
+	P []interface{} `json:"P"`
+}
+
+func (q *simpleDeque) Decode(readCloser io.ReadCloser) error {
+
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+	defer readCloser.Close()
+
+	var d Data
+	if err := json.NewDecoder(readCloser).Decode(&d); err != nil {
+		return fmt.Errorf("decode: %v", err)
+	}
+
+	q.queue = append(q.queue, d.Q)
+
+	for _, d := range d.D {
+		q.dirty[d] = empty{}
+	}
+	for _, p := range d.P {
+		q.processing[p] = empty{}
+	}
+
+	return nil
+}
+
+func (q *simpleDeque) Encode(writeCloser io.WriteCloser) error {
+
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+	defer writeCloser.Close()
+
+	d := Data{
+		Q: q.queue,
+	}
+
+	for o, _ := range q.dirty {
+		d.D = append(d.D, o)
+	}
+	for o, _ := range q.processing {
+		d.P = append(d.P, o)
+	}
+
+	return json.NewEncoder(writeCloser).Encode(d)
 }
 
 func (q *simpleDeque) Push(o interface{}) error {

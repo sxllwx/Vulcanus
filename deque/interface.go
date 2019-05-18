@@ -1,7 +1,11 @@
 package deque
 
+import "io"
+
 // Interface of double-end-queue
 type Interface interface {
+	Serializer
+
 	// current length of queue
 	Len() (int, error)
 
@@ -13,4 +17,19 @@ type Interface interface {
 	Pop() (interface{}, error)
 	// ack the object
 	Done(interface{}) error
+}
+
+type Serializer interface {
+	Decoder
+	Encoder
+}
+
+type Decoder interface {
+	// decode from disk
+	Decode(io.ReadCloser) error
+}
+
+type Encoder interface {
+	// persistence to disk
+	Encode(io.WriteCloser) error
 }
