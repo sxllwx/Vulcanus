@@ -1,22 +1,17 @@
 package deque
 
-type StopErr string
-
-func (s StopErr) Error() string {
-	return "double end queue already stop"
-}
-
-func CheckStopError(err error) bool {
-	_, is := err.(StopErr)
-	return is
-}
-
+// Interface of double-end-queue
 type Interface interface {
+	// current length of queue
 	Len() (int, error)
 
+	// push object to queue tail
 	Push(interface{}) error
+	// get object to queue header
 	Shift() (interface{}, error)
+	// get object from queue tail
 	Pop() (interface{}, error)
-	Done(interface{})
+	// ack the object
+	Done(interface{}) error
 }
 

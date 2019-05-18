@@ -1,9 +1,16 @@
 package deque
 
-import "sync"
+import (
+	"sync"
+)
 
 type empty struct{}
 type set map[interface{}]empty
+type StopErr string
+
+func (s StopErr) Error() string {
+	return "double end queue already stop"
+}
 
 func (s set) add(o interface{}) {
 	s[o] = empty{}
@@ -21,11 +28,10 @@ func (s set) delete(o interface{}) {
 	delete(s, o)
 }
 
-
 // simpleDeque provider a simple double end queue with follow features
 // * Fair: item can be process in order
 // * Stingy: a item just will be handle by on consumer
-// * ShutDown notifications
+// * No-Repeat
 type simpleDeque struct {
 
 	// protect queue
@@ -34,6 +40,7 @@ type simpleDeque struct {
 	queue []interface{}
 
 	// need to process
+	// distinct the object
 	dirty set
 
 	// processing
@@ -42,7 +49,7 @@ type simpleDeque struct {
 	stop <-chan struct{}
 }
 
-func New(stop <-chan struct{}) Interface {
+func New(stop <-chan struct{}) *simpleDeque {
 
 	q := &simpleDeque{
 		stop: stop,
@@ -60,6 +67,22 @@ func (q *simpleDeque) Len() (int, error) {
 		return 0, err
 	}
 	return len(q.queue), nil
+}
+
+func (q *simpleDeque) Push(o interface{}) error {
+	return q.insert(o, insertToTail)
+}
+
+func (q *simpleDeque) Shift() (interface{}, error) {
+	return q.out(outFromHeader)
+}
+
+func (q *simpleDeque) Pop() (interface{}, error) {
+	return q.out(outFromTail)
+}
+
+func (q *simpleDeque) Done(o interface{}) error {
+	return q.ack(o)
 }
 
 func (q *simpleDeque) check() error {
@@ -127,17 +150,17 @@ func (q *simpleDeque) ack(o interface{}) error {
 	return nil
 }
 
-func InsertToTail(queue []interface{}, o interface{}) []interface{} {
+func insertToTail(queue []interface{}, o interface{}) []interface{} {
 	return append(queue, o)
 }
 
-func InsertToHeader(queue []interface{}, o interface{}) []interface{} {
+func insertToHeader(queue []interface{}, o interface{}) []interface{} {
 	return append(append([]interface{}{}, o), queue...)
 }
 
-func OutFromHeader(queue []interface{}) (interface{}, []interface{}) {
+func outFromHeader(queue []interface{}) (interface{}, []interface{}) {
 	return queue[0], queue[1:]
 }
-func OutFromTail(queue []interface{}) (interface{}, []interface{}) {
+func outFromTail(queue []interface{}) (interface{}, []interface{}) {
 	return queue[len(queue)-1], queue[0 : len(queue)-1]
 }
