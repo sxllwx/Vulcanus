@@ -4,6 +4,7 @@ import "io"
 
 // Interface of double-end-queue
 type Interface interface {
+	// Serialize interface to persistence storage
 	Serializer
 
 	// current length of queue
