@@ -55,7 +55,9 @@ type simpleDeque struct {
 func New(stop <-chan struct{}) Interface {
 
 	q := &simpleDeque{
-		stop: stop,
+		stop:       stop,
+		dirty:      set{},
+		processing: set{},
 	}
 	q.cond.L = &sync.Mutex{}
 	return q
@@ -125,6 +127,7 @@ func (q *simpleDeque) Push(o interface{}) error {
 
 func (q *simpleDeque) Shift() (interface{}, error) {
 	return q.out(outFromHeader)
+
 }
 
 func (q *simpleDeque) Pop() (interface{}, error) {
@@ -159,7 +162,6 @@ func (q *simpleDeque) insert(o interface{}, specDirectionInsertFunc func([]inter
 		return nil
 	}
 	q.dirty.add(o)
-
 	q.queue = specDirectionInsertFunc(q.queue, o)
 	q.cond.Signal()
 
@@ -170,6 +172,9 @@ func (q *simpleDeque) out(specDirectionOutFunc func([]interface{}) (interface{},
 
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
+
+	defer func() {
+	}()
 
 	if err := q.check(); err != nil {
 		return nil, err
