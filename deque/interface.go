@@ -1,6 +1,8 @@
 package deque
 
-import "io"
+import (
+	"io"
+)
 
 // Interface of double-end-queue
 type Interface interface {
