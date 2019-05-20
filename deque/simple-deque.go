@@ -10,8 +10,6 @@ func (s StopErr) Error() string {
 	return "double end queue already stop"
 }
 
-var empty = struct{}{}
-
 type processQueue []interface{}
 
 func (s processQueue) add(o interface{}) {
