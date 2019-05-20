@@ -82,7 +82,6 @@ func (q *simpleDeque) Decode(readCloser io.ReadCloser) error {
 
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
-	defer readCloser.Close()
 
 	var d Data
 	if err := json.NewDecoder(readCloser).Decode(&d); err != nil {
@@ -105,7 +104,6 @@ func (q *simpleDeque) Encode(writeCloser io.WriteCloser) error {
 
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
-	defer writeCloser.Close()
 
 	d := Data{
 		Q: q.queue,
