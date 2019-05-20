@@ -12,27 +12,32 @@ func (s StopErr) Error() string {
 
 var empty = struct{}{}
 
-type set map[interface{}]struct{}
+type processQueue []interface{}
 
-func (s set) add(o interface{}) {
-	_, ok := s[o]
-	if ok {
+func (s processQueue) add(o interface{}) {
+
+	if s.has(o){
 		return
 	}
-	s[o] = empty
+	s = append(s, o)
 }
 
-func (s set) delete(o interface{}) {
-	_, ok := s[o]
-	if !ok {
-		return
+
+func (s processQueue) delete(o interface{}) {
+	for i, object := range s{
+		if  object == o{
+			s= append(s[:i], s[i:])
+		}
 	}
-	delete(s, o)
 }
 
-func (s set) has(o interface{}) bool {
-	_, ok := s[o]
-	return ok
+func (s processQueue) has(o interface{}) bool {
+	for _, object := range s{
+		if  object == o{
+			return true
+		}
+	}
+	return false
 }
 
 // simpleDeque provider a simple double end queue with follow features
@@ -48,7 +53,7 @@ type simpleDeque struct {
 
 	queue []interface{}
 
-	processing set
+	processing processQueue
 
 	persistenceOperation func()
 
@@ -60,7 +65,7 @@ func New(persistenceOperation func(), stop <-chan struct{}) Interface {
 	q := &simpleDeque{
 		stop:                 stop,
 		persistenceOperation: persistenceOperation,
-		processing:           set{},
+		processing:           processQueue{},
 	}
 	q.cond.L = &sync.Mutex{}
 	go q.persistenceLoop()
@@ -119,6 +124,8 @@ func (q *simpleDeque) Insert(o interface{}, insertDirection InsertDirection) err
 	return nil
 }
 
+// Out
+// ** This method will block until Insert a new object
 func (q *simpleDeque) Out(outDirection OutDirection) (interface{}, error) {
 
 	q.cond.L.Lock()

@@ -2,9 +2,7 @@ package deque
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/rand"
 	"testing"
-	"time"
 )
 
 func TestNew(t *testing.T) {
@@ -12,30 +10,27 @@ func TestNew(t *testing.T) {
 	stop := make(chan struct{})
 
 	q := New(func() {
-		fmt.Println("it's op")
+		fmt.Println("it's persistence op")
 	}, stop)
 
 	go func() {
 
+		i := 0
 		for {
-			time.Sleep(600 * time.Millisecond)
-			if err := q.Insert(rand.String(123), InsertToHeader); err != nil {
+			if err := q.Insert(i, InsertToHeader); err != nil {
 				panic(err)
 			}
-			fmt.Println("pushed a object")
+			i++
 		}
 
 	}()
 
 	for {
-
-		time.Sleep(500 * time.Millisecond)
-		o, err := q.Empty()
+		o, err := q.Out(OutFromTail)
 		if err != nil {
 			panic(err)
 		}
-
-		fmt.Printf("get %v \n", len(o))
+		fmt.Printf("get %v \n", o)
 	}
 
 }
