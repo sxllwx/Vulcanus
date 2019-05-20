@@ -125,6 +125,10 @@ func (q *simpleDeque) Push(o interface{}) error {
 	return q.insert(o, insertToTail)
 }
 
+func (q *simpleDeque) Revert(o interface{}) error {
+	return q.insert(o, insertToHeader)
+}
+
 func (q *simpleDeque) Shift() (interface{}, error) {
 	return q.out(outFromHeader)
 
@@ -173,9 +177,6 @@ func (q *simpleDeque) out(specDirectionOutFunc func([]interface{}) (interface{},
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 
-	defer func() {
-	}()
-
 	if err := q.check(); err != nil {
 		return nil, err
 	}
@@ -189,6 +190,7 @@ func (q *simpleDeque) out(specDirectionOutFunc func([]interface{}) (interface{},
 
 	q.processing.add(o)
 	q.dirty.delete(o)
+
 	return o, nil
 }
 

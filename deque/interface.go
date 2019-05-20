@@ -14,6 +14,9 @@ type Interface interface {
 
 	// push object to queue tail
 	Push(interface{}) error
+	// get object but return too late
+	// then put back to deque
+	Revert(interface{}) error
 	// get object to queue header
 	Shift() (interface{}, error)
 	// get object from queue tail
