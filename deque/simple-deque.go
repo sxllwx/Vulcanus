@@ -14,24 +14,23 @@ type processQueue []interface{}
 
 func (s processQueue) add(o interface{}) {
 
-	if s.has(o){
+	if s.has(o) {
 		return
 	}
 	s = append(s, o)
 }
 
-
 func (s processQueue) delete(o interface{}) {
-	for i, object := range s{
-		if  object == o{
-			s= append(s[:i], s[i:])
+	for i, object := range s {
+		if object == o {
+			s = append(s[:i], s[i:])
 		}
 	}
 }
 
 func (s processQueue) has(o interface{}) bool {
-	for _, object := range s{
-		if  object == o{
+	for _, object := range s {
+		if object == o {
 			return true
 		}
 	}
@@ -94,7 +93,17 @@ func (q *simpleDeque) Len() (int, error) {
 }
 
 func (q *simpleDeque) Revert(o interface{}) error {
-	return q.Insert(o, InsertToHeader)
+
+	// put back to queue
+	if err := q.Insert(o, InsertToHeader); err != nil {
+		return err
+	}
+
+	// delete object from process
+	if err := q.Done(o); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (q *simpleDeque) check() error {
