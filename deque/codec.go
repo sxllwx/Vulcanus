@@ -12,6 +12,9 @@ type Data struct {
 
 func (q *simpleDeque) Decode(rawData []byte) error {
 
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+
 	var d Data
 	if err := json.Unmarshal(rawData, d); err != nil {
 		return fmt.Errorf("decode: %v", err)
@@ -27,12 +30,12 @@ func (q *simpleDeque) Decode(rawData []byte) error {
 
 func (q *simpleDeque) Encode() ([]byte, error) {
 
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+
 	d := Data{
 		Q: q.queue,
-	}
-
-	for o, _ := range q.processing {
-		d.P = append(d.P, o)
+		P: q.processing,
 	}
 
 	return json.Marshal(d)
