@@ -12,18 +12,18 @@ func (s StopErr) Error() string {
 
 type processQueue []interface{}
 
-func (s processQueue) add(o interface{}) {
+func (s *processQueue) add(o interface{}) {
 
 	if s.has(o) {
 		return
 	}
-	s = append(s, o)
+	*s = append(*s, o)
 }
 
-func (s processQueue) delete(o interface{}) {
-	for i, object := range s {
+func (s *processQueue) delete(o interface{}) {
+	for i, object := range *s {
 		if object == o {
-			s = append(s[:i], s[i:])
+			*s = append((*s)[:i], (*s)[i:])
 		}
 	}
 }
@@ -54,31 +54,29 @@ type simpleDeque struct {
 
 	persistenceOperation func()
 
-	stop <-chan struct{}
+	running bool
 }
 
-func New(persistenceOperation func(), stop <-chan struct{}) Interface {
+func New(persistenceOperation func()) Interface {
 
 	q := &simpleDeque{
-		stop:                 stop,
+		running:              true,
 		persistenceOperation: persistenceOperation,
 		processing:           processQueue{},
 	}
 	q.cond.L = &sync.Mutex{}
-	go q.persistenceLoop()
 	return q
 }
 
-func (q *simpleDeque) persistenceLoop() {
+func (q *simpleDeque) Stop() {
 
-	for {
-		func() {
-			q.cond.L.Lock()
-			defer q.cond.L.Unlock()
-			q.cond.Wait()
-			q.persistenceOperation()
-		}()
-	}
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+
+	q.running = false
+	q.persistenceOperation()
+
+	q.cond.Broadcast()
 }
 
 func (q *simpleDeque) Len() (int, error) {
@@ -108,12 +106,10 @@ func (q *simpleDeque) Revert(o interface{}) error {
 
 func (q *simpleDeque) check() error {
 
-	select {
-	case <-q.stop:
-		return StopErr("")
-	default:
+	if q.running {
+		return nil
 	}
-	return nil
+	return StopErr("")
 }
 
 func (q *simpleDeque) Insert(o interface{}, insertDirection InsertDirection) error {
@@ -138,42 +134,20 @@ func (q *simpleDeque) Out(outDirection OutDirection) (interface{}, error) {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 
-	if err := q.check(); err != nil {
-		return nil, err
+	for len(q.queue) == 0 && q.running {
+		q.cond.Wait()
 	}
 
-	for len(q.queue) == 0 {
-		q.cond.Wait()
+	if err := q.check(); err != nil {
+		return nil, err
 	}
 
 	var o interface{}
 	o, q.queue = outDirection(q.queue)
+	q.processing.add(o)
 	q.cond.Broadcast()
 
 	return o, nil
-}
-
-func (q *simpleDeque) Empty() ([]interface{}, error) {
-
-	q.cond.L.Lock()
-	defer q.cond.L.Unlock()
-
-	if err := q.check(); err != nil {
-		return nil, err
-	}
-
-	if len(q.queue) == 0 {
-		return nil, nil
-	}
-
-	for _, o := range q.queue {
-		q.processing.add(o)
-	}
-
-	var out []interface{}
-	out, q.queue = q.queue, nil
-	q.cond.Broadcast()
-	return out, nil
 }
 
 func (q *simpleDeque) Done(o interface{}) error {

@@ -15,11 +15,10 @@ type Interface interface {
 	// then put back to deque
 	Revert(interface{}) error
 
-	// get all queue element from queue
-	Empty() ([]interface{}, error)
-
 	// ack the object
 	Done(interface{}) error
+
+	Stop()
 }
 
 type Serializer interface {

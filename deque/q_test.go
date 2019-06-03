@@ -3,15 +3,19 @@ package deque
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestNew(t *testing.T) {
 
-	stop := make(chan struct{})
-
 	q := New(func() {
 		fmt.Println("it's persistence op")
-	}, stop)
+	})
+
+	time.AfterFunc(2*time.Second, func() {
+
+		q.Stop()
+	})
 
 	go func() {
 
@@ -21,6 +25,11 @@ func TestNew(t *testing.T) {
 				panic(err)
 			}
 			i++
+
+			if i == 20 {
+
+				time.Sleep(1 * time.Minute)
+			}
 		}
 
 	}()
