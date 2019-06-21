@@ -29,23 +29,23 @@ type Logger struct {
 }
 
 func (l *Logger) Info(args ...interface{}) {
-	l.Infof("%v", args)
+	l.Infof("%v", args...)
 }
 
 func (l *Logger) Warn(args ...interface{}) {
-	l.Warningf("%v", args)
+	l.Warningf("%v", args...)
 }
 
 func (l *Logger) Error(args ...interface{}) {
-	l.Errorf("%v", args)
+	l.Errorf("%v", args...)
 }
 
 func (l *Logger) Debug(args ...interface{}) {
-	l.Debugf("%v", args)
+	l.Debugf("%v", args...)
 }
 
 func (l *Logger) Study(args ...interface{}) {
-	l.Studyf("%v", args)
+	l.Studyf("%v", args...)
 }
 
 func (l *Logger) Warnf(fmt string, args ...interface{}) {
