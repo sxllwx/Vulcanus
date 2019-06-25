@@ -7,16 +7,16 @@ import (
 )
 
 const (
-	color_red = uint8(iota + 91)
-	color_green
-	color_yellow
-	color_blue
-	color_magenta //洋红
-	info          = "[INFO] "
-	debug         = "[DEBUG] "
-	err           = "[ERRO] "
-	warn          = "[WARN] "
-	study         = "[STUDY] "
+	colorRed = uint8(iota + 91)
+	colorGreen
+	colorYellow
+	colorBlue
+	colorMagenta
+	info  = "[INFO] "
+	debug = "[DEBUG] "
+	err   = "[ERRO] "
+	warn  = "[WARN] "
+	study = "[STUDY] "
 )
 
 type Study interface {
@@ -78,21 +78,21 @@ func (l *Logger) Studyf(format string, args ...interface{}) {
 }
 
 func red(s string) string {
-	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", color_red, s)
+	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", colorRed, s)
 }
 
 func green(s string) string {
-	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", color_green, s)
+	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", colorGreen, s)
 }
 
 func yellow(s string) string {
-	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", color_yellow, s)
+	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", colorYellow, s)
 }
 
 func blue(s string) string {
-	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", color_blue, s)
+	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", colorBlue, s)
 }
 
 func magenta(s string) string {
-	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", color_magenta, s)
+	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", colorMagenta, s)
 }
