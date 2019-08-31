@@ -85,6 +85,32 @@ func (s *{{.Service.Type}}) intallWebService(){
 
 	tags := []string{"{{.Service.Tag.Name}}"}
 
+	ws.Route(ws.POST("").To(s.create).
+		// docs
+		Doc("create a {{.Service.Kind}}").
+		Filter(s.measureTime).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Reads({{.Model.Name}}{})) // from the request
+
+	ws.Route(ws.PATCH("").To(s.patch).
+		// docs
+		Doc("patch a {{.Service.Kind}}").
+		Filter(s.measureTime).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Reads([]byte{})) // from the request
+
+	ws.Route(ws.PUT("/{id}").To(s.update).
+		// docs
+		Doc("update a {{.Service.Kind}}").
+		Filter(s.measureTime).
+		Param(ws.PathParameter("id", "identifier of the {{.Service.Kind}}").DataType("string")).
+		// set more rich query condition
+		Param(ws.QueryParameter("", "").DataType("")).
+		// set more rich header 
+		Param(ws.HeaderParameter("", "").DataType("")).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Reads({{.Model.Name}}{})) // from the request
+
 	ws.Route(ws.GET("/").To(s.getAll).
 		// docs
 		Doc("get all {{.Service.Kind}}").
@@ -97,7 +123,7 @@ func (s *{{.Service.Type}}) intallWebService(){
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		// the server will provide object-instance for client
 		Writes([]{{.Model.Name}}{}).
-		Returns(200, "OK", []{{.Model.Name}}{}))
+		Returns(200, "OK", []{{.Model.Name}}{}).
 		Returns(404, "Not Found", nil))
 
 	ws.Route(ws.GET("/{id}").To(s.get).
@@ -115,24 +141,7 @@ func (s *{{.Service.Type}}) intallWebService(){
 		Returns(200, "OK", {{.Model.Name}}{}).
 		Returns(404, "Not Found", nil))
 
-	ws.Route(ws.PUT("/{id}").To(s.update).
-		// docs
-		Doc("update a {{.Service.Kind}}").
-		Filter(s.measureTime).
-		Param(ws.PathParameter("id", "identifier of the {{.Service.Kind}}").DataType("string")).
-		// set more rich query condition
-		Param(ws.QueryParameter("", "").DataType("")).
-		// set more rich header 
-		Param(ws.HeaderParameter("", "").DataType("")).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads({{.Model.Name}}{})) // from the request
 
-	ws.Route(ws.POST("").To(s.create).
-		// docs
-		Doc("create a {{.Service.Kind}}").
-		Filter(s.measureTime).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads({{.Model.Name}}{})) // from the request
 
 	ws.Route(ws.DELETE("/{id}").To(s.delete).
 		// docs
@@ -157,7 +166,7 @@ func (s *{{.Service.Type}}) intallWebService(){
 	return nil
 }
 
-func (g *webServiceGenerator) generateRegisterFunc() error {
+func (g *webServiceGenerator) generateFunc() error {
 
 	return nil
 }
