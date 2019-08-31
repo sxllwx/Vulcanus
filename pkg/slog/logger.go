@@ -98,7 +98,7 @@ func New(w io.Writer, opts ...func(*options)) *logger {
 		w = os.Stdout
 	}
 
-	lr := log.New(w, "", log.LstdFlags|log.Lshortfile|log.Ltime)
+	lr := log.New(w, "", log.LstdFlags|log.Llongfile|log.Ltime)
 	return &logger{
 		Logger: lr,
 		o:      o,

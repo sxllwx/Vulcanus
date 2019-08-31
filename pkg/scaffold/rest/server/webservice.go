@@ -2,14 +2,13 @@ package server
 
 import (
 	"bytes"
-	"io"
 	"text/template"
 
 	"github.com/pkg/errors"
 )
 
 type webServiceGenerator struct {
-	cache  *bytes.Buffer
+	*bytes.Buffer
 	config *webServiceConfig
 }
 
@@ -19,7 +18,19 @@ type webServiceConfig struct {
 	Model   *Model
 }
 
-func (g *webServiceGenerator) generate() error {
+func NewWebServiceGenerator(p *Package, s *Service, m *Model) Generator {
+
+	return &webServiceGenerator{
+		Buffer: &bytes.Buffer{},
+		config: &webServiceConfig{
+			Package: p,
+			Service: s,
+			Model:   m,
+		},
+	}
+}
+
+func (g *webServiceGenerator) Generate() error {
 
 	if err := g.generateType(); err != nil {
 		return errors.WithMessage(err, "generate type")
@@ -44,6 +55,13 @@ func (g *webServiceGenerator) generateType() error {
 
 	const tmplt = `package {{.Package.Name}}
 
+import (
+	"time"
+
+	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful-openapi"
+)
+
 // alias the client & server communicate model
 // TODO: Fix the struct{} ->  real model
 type {{.Model.Name}} = struct{}
@@ -62,7 +80,7 @@ type {{.Service.Type}} struct{
 		return errors.WithMessage(err, "parse template")
 	}
 
-	if err := t.Execute(g.cache, g.config); err != nil {
+	if err := t.Execute(g.Buffer, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
 	}
 	return nil
@@ -88,7 +106,7 @@ func New{{.Service.Type}}(c *restful.Container){
 		return errors.WithMessage(err, "parse template")
 	}
 
-	if err := t.Execute(g.cache, g.config); err != nil {
+	if err := t.Execute(g.Buffer, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
 	}
 	return nil
@@ -187,7 +205,7 @@ func (s *{{.Service.Type}}) installWebService(){
 		return errors.WithMessage(err, "parse template")
 	}
 
-	if err := t.Execute(g.cache, g.config); err != nil {
+	if err := t.Execute(g.Buffer, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
 	}
 	return nil
@@ -208,17 +226,12 @@ func (s *{{.Service.Type}})update(request *restful.Request, response *restful.Re
 	if err != nil {
 		return errors.WithMessage(err, "parse template")
 	}
-	if err := t.Execute(g.cache, g.config); err != nil {
+	if err := t.Execute(g.Buffer, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
 	}
 	return nil
 }
 
-func (g *webServiceGenerator) Flush(w io.Writer) error {
-
-	_, err := g.cache.WriteTo(w)
-	if err != nil {
-		return errors.WithMessage(err, "flush to io.writer")
-	}
-	return nil
+func (g *webServiceGenerator) SuggestFileName() string {
+	return webServiceSuggestName
 }

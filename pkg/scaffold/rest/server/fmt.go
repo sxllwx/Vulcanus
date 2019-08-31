@@ -1,33 +1,28 @@
 package server
 
 import (
+	"io"
 	"io/ioutil"
-	"os"
 
 	"github.com/pkg/errors"
 	"golang.org/x/tools/imports"
 )
 
-func FormatAndImport(fileName string) error {
+func FormatAndImport(srcR io.Reader, dstW io.Writer) error {
 
-	src, err := ioutil.ReadFile(fileName)
+	src, err := ioutil.ReadAll(srcR)
 	if err != nil {
 		return errors.WithMessage(err, "read src")
 	}
 
-	result, err := imports.Process("", src, &imports.Options{})
+	result, err := imports.Process("", src, &imports.Options{
+		Comments: true, // keep my comment
+	})
 	if err != nil {
 		return errors.WithMessage(err, "imports")
 	}
 
-	dst, err := os.OpenFile(fileName, os.O_RDWR|os.O_TRUNC, 0666)
-	if err != nil {
-		return errors.WithMessage(err, "open src")
-	}
-
-	defer dst.Close()
-
-	_, err = dst.Write(result)
+	_, err = dstW.Write(result)
 	if err != nil {
 		return errors.WithMessage(err, "write dst")
 	}

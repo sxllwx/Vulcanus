@@ -2,24 +2,35 @@ package server
 
 import (
 	"bytes"
-	"io"
 	"text/template"
 
 	"github.com/pkg/errors"
 )
 
-type swaggerInfoGenerator struct {
-	cache  *bytes.Buffer
-	config *swaggerConfig
+type openAPIGenerator struct {
+	*bytes.Buffer
+	config *openAPIConfig
 }
 
-type swaggerConfig struct {
+func NewOpenAPIGenerator(p *Package, s *Service, a *Author) Generator {
+
+	return &openAPIGenerator{
+		Buffer: &bytes.Buffer{},
+		config: &openAPIConfig{
+			Package: p,
+			Service: s,
+			Author:  a,
+		},
+	}
+}
+
+type openAPIConfig struct {
 	Package *Package
 	Service *Service
 	Author  *Author
 }
 
-func (g *swaggerInfoGenerator) generate() error {
+func (g *openAPIGenerator) Generate() error {
 
 	if err := g.generateOpenAPIRegisterFunc(); err != nil {
 		return errors.WithMessage(err, "generate open-api register func")
@@ -32,9 +43,16 @@ func (g *swaggerInfoGenerator) generate() error {
 	return nil
 }
 
-func (g *swaggerInfoGenerator) generateOpenAPIRegisterFunc() error {
+func (g *openAPIGenerator) generateOpenAPIRegisterFunc() error {
 
 	const tmplt = `package {{.Package.Name}}
+
+import (
+	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful-openapi"
+	"github.com/go-openapi/spec"
+)
+
 func (s *{{.Service.Type}})RegisterOpenAPI(){
 
 	config := restfulspec.Config{
@@ -49,13 +67,13 @@ func (s *{{.Service.Type}})RegisterOpenAPI(){
 	if err != nil {
 		return errors.WithMessage(err, "parse template")
 	}
-	if err := t.Execute(g.cache, g.config); err != nil {
+	if err := t.Execute(g.Buffer, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
 	}
 	return nil
 }
 
-func (g *swaggerInfoGenerator) generateRichSwaggerDocFunc() error {
+func (g *openAPIGenerator) generateRichSwaggerDocFunc() error {
 
 	const tmplt = `
 func (s *{{.Service.Type}})richSwaggerDoc(swaggerRootDoc *spec.Swagger){
@@ -83,18 +101,13 @@ func (s *{{.Service.Type}})richSwaggerDoc(swaggerRootDoc *spec.Swagger){
 	if err != nil {
 		return errors.WithMessage(err, "parse template")
 	}
-	if err := t.Execute(g.cache, g.config); err != nil {
+	if err := t.Execute(g.Buffer, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
 	}
 
 	return nil
 }
 
-func (g *swaggerInfoGenerator) Flush(w io.Writer) error {
-
-	_, err := g.cache.WriteTo(w)
-	if err != nil {
-		return errors.WithMessage(err, "flush to io.writer")
-	}
-	return nil
+func (g *openAPIGenerator) SuggestFileName() string {
+	return openAPISuggestName
 }
