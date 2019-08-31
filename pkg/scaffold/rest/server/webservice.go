@@ -9,8 +9,7 @@ import (
 )
 
 type webServiceGenerator struct {
-	cache *bytes.Buffer
-
+	cache  *bytes.Buffer
 	config *webServiceConfig
 }
 
