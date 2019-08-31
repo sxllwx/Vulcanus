@@ -20,8 +20,8 @@ func FormatAndImport(fileName string) error {
 		return errors.WithMessage(err, "imports")
 	}
 
-	dst, err := os.OpenFile(fileName, os.O_RDWR | os.O_TRUNC, 0666)
-	if err != nil{
+	dst, err := os.OpenFile(fileName, os.O_RDWR|os.O_TRUNC, 0666)
+	if err != nil {
 		return errors.WithMessage(err, "open src")
 	}
 
