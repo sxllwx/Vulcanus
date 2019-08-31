@@ -14,6 +14,7 @@ type webServiceGenerator struct {
 }
 
 type webServiceConfig struct {
+	Package *Package
 	Service *Service
 	Model   *Model
 }
@@ -22,6 +23,10 @@ func (g *webServiceGenerator) generate() error {
 
 	if err := g.generateType(); err != nil {
 		return errors.WithMessage(err, "generate type")
+	}
+
+	if err := g.generateConstructorFunc(); err != nil {
+		return errors.WithMessage(err, "generate constructor")
 	}
 
 	if err := g.generateWsFunc(); err != nil {
@@ -38,6 +43,7 @@ func (g *webServiceGenerator) generate() error {
 func (g *webServiceGenerator) generateType() error {
 
 	const tmplt = `
+package {{.Package.Name}}
 
 // alias the client & server communicate model
 // TODO: Fix the struct{} ->  real model
@@ -53,6 +59,32 @@ type {{.Service.Type}} struct{
 `
 
 	t, err := template.New("types-tplt").Parse(tmplt)
+	if err != nil {
+		return errors.WithMessage(err, "parse template")
+	}
+
+	if err := t.Execute(g.cache, g.config); err != nil {
+		return errors.WithMessage(err, "execute template")
+	}
+	return nil
+}
+
+func (g *webServiceGenerator) generateConstructorFunc() error {
+
+	const tmplt = `
+
+func New{{.Service.Type}}(c *restful.Container){
+
+   s := &{{.Service.Type}}{
+       container: c,
+   }
+
+   s.installWebService()
+   s.RegisterOpenAPI()
+}
+`
+
+	t, err := template.New("constructor-tplt").Parse(tmplt)
 	if err != nil {
 		return errors.WithMessage(err, "parse template")
 	}

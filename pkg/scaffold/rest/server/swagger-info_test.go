@@ -58,11 +58,6 @@ func TestE2E(t *testing.T) {
 		},
 	}
 
-	fh, err := os.OpenFile("demo1.go", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	if err := sg.generate(); err != nil {
 		t.Fatal(err)
 	}
@@ -71,10 +66,20 @@ func TestE2E(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := sg.Flush(fh); err != nil {
+	openAPIFD, err := os.OpenFile("open-api.go", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := wg.Flush(fh); err != nil {
+
+	wsFD, err := os.OpenFile("ws.go", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := sg.Flush(openAPIFD); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := wg.Flush(wsFD); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -10,6 +10,10 @@ const (
 	ResourceTypeSuffix = "Manager"
 )
 
+type Package struct {
+	Name string
+}
+
 // the service tag for swagger
 type Tag struct {
 	Name        string
