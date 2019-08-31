@@ -71,7 +71,7 @@ func (s *{{.Service.Type}}) measureTime(req *restful.Request, resp *restful.Resp
 	time.Now().Sub(now)
 }
 
-func (s *{{.Service.Type}}) intallWebService(){
+func (s *{{.Service.Type}}) installWebService(){
 	ws := new(restful.WebService)
 	ws.
 		Path("{{.Service.RootURLPrefix}}").
