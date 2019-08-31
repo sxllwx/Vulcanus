@@ -48,7 +48,6 @@ func (g *openAPIGenerator) generateOpenAPIRegisterFunc() error {
 	const tmplt = `package {{.Package.Name}}
 
 import (
-	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
 )
@@ -56,7 +55,7 @@ import (
 func (s *{{.Service.Type}})RegisterOpenAPI(){
 
 	config := restfulspec.Config{
-		WebServices: restful.RegisteredWebServices(), // you control what services are visible
+		WebServices: s.container.RegisteredWebServices(), // you control what services are visible
 		APIPath:     "/apidocs.json",
 		PostBuildSwaggerObjectHandler: s.richSwaggerDoc,
 	}

@@ -68,7 +68,7 @@ func Generate(gList ...Generator) error {
 			}
 
 			// 3. create file
-			w, err := os.OpenFile(g.SuggestFileName(), os.O_RDWR|os.O_CREATE, 0666)
+			w, err := os.OpenFile(g.SuggestFileName(), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 			if err != nil {
 				return errors.WithMessagef(err, "open %s", g.SuggestFileName())
 			}
