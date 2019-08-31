@@ -21,21 +21,43 @@ type swaggerConfig struct {
 
 func (g *swaggerInfoGenerator) generate() error {
 
-	if err := g.generateRichSwaggerDocFunc(); err != nil {
-		return errors.WithMessage(err, "generate rich swagger doc func")
-	}
-
 	if err := g.generateOpenAPIRegisterFunc(); err != nil {
 		return errors.WithMessage(err, "generate open-api register func")
 	}
 
+	if err := g.generateRichSwaggerDocFunc(); err != nil {
+		return errors.WithMessage(err, "generate rich swagger doc func")
+	}
+
+	return nil
+}
+
+func (g *swaggerInfoGenerator) generateOpenAPIRegisterFunc() error {
+
+	const tmplt = `package {{.Package.Name}}
+func (s *{{.Service.Type}})RegisterOpenAPI(){
+
+	config := restfulspec.Config{
+		WebServices: restful.RegisteredWebServices(), // you control what services are visible
+		APIPath:     "/apidocs.json",
+		PostBuildSwaggerObjectHandler: s.richSwaggerDoc,
+	}
+	s.container.Add(restfulspec.NewOpenAPIService(config))
+}`
+
+	t, err := template.New("OpenAPITemplate").Parse(tmplt)
+	if err != nil {
+		return errors.WithMessage(err, "parse template")
+	}
+	if err := t.Execute(g.cache, g.config); err != nil {
+		return errors.WithMessage(err, "execute template")
+	}
 	return nil
 }
 
 func (g *swaggerInfoGenerator) generateRichSwaggerDocFunc() error {
 
 	const tmplt = `
-package {{.Package.Name}}
 func (s *{{.Service.Type}})richSwaggerDoc(swaggerRootDoc *spec.Swagger){
 
 	// TODO: Fix Author Info
@@ -65,29 +87,6 @@ func (s *{{.Service.Type}})richSwaggerDoc(swaggerRootDoc *spec.Swagger){
 		return errors.WithMessage(err, "execute template")
 	}
 
-	return nil
-}
-
-func (g *swaggerInfoGenerator) generateOpenAPIRegisterFunc() error {
-
-	const tmplt = `
-func (s *{{.Service.Type}})RegisterOpenAPI(){
-
-	config := restfulspec.Config{
-		WebServices: restful.RegisteredWebServices(), // you control what services are visible
-		APIPath:     "/apidocs.json",
-		PostBuildSwaggerObjectHandler: s.richSwaggerDoc,
-	}
-	s.container.Add(restfulspec.NewOpenAPIService(config))
-}`
-
-	t, err := template.New("OpenAPITemplate").Parse(tmplt)
-	if err != nil {
-		return errors.WithMessage(err, "parse template")
-	}
-	if err := t.Execute(g.cache, g.config); err != nil {
-		return errors.WithMessage(err, "execute template")
-	}
 	return nil
 }
 

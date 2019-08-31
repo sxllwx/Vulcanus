@@ -13,6 +13,9 @@ func TestSwagger(t *testing.T) {
 			Kind: "books",
 		},
 		Author: &Author{},
+		Package: &Package{
+			Name: "server",
+		},
 	}
 
 	c.Service.Complete()
@@ -38,6 +41,9 @@ func TestE2E(t *testing.T) {
 			Kind: "books",
 		},
 		Author: &Author{},
+		Package: &Package{
+			Name: "server",
+		},
 	}
 
 	c.Service.Complete()
@@ -52,6 +58,7 @@ func TestE2E(t *testing.T) {
 		cache: &bytes.Buffer{},
 		config: &webServiceConfig{
 			Service: c.Service,
+			Package: c.Package,
 			Model: &Model{
 				Name: "Book",
 			},

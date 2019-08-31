@@ -42,8 +42,7 @@ func (g *webServiceGenerator) generate() error {
 
 func (g *webServiceGenerator) generateType() error {
 
-	const tmplt = `
-package {{.Package.Name}}
+	const tmplt = `package {{.Package.Name}}
 
 // alias the client & server communicate model
 // TODO: Fix the struct{} ->  real model
