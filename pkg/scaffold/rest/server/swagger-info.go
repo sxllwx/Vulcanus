@@ -22,7 +22,7 @@ func (g *swaggerInfoGenerator) generate() error {
 	const tmplt = `
 func (s *{{.Service.Type}})richSwaggerDoc(swaggerRootDoc *spec.Swagger){
 
-
+	// TODO: Fix Author Info
 	swaggerRootDoc.Info = &spec.Info{
 		InfoProps: spec.InfoProps{
 			Title:       "{{.Service.Title}}",

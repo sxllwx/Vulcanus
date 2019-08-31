@@ -44,13 +44,13 @@ func (g *webServiceGenerator) generateType() error {
 	const tmplt = `
 
 // alias the client & server communicate model
-type {{.Model.Name}} = 
+// TODO: Fix the struct{} ->  real model
+type {{.Model.Name}} = struct{}
 
 
 // {{.Service.Type}}Manager
 // used to manage resource
 type {{.Service.Type}} struct{
-
    ws *restful.WebService
    container *restful.Container
 }
@@ -90,22 +90,27 @@ func (s *{{.Service.Type}}) intallWebService(){
 		Doc("get all {{.Service.Kind}}").
 		// spec a useful filter 
 		Filter(s.measureTime).
+		// spec a spec query condition (the param stay in params)
 		Param(ws.QueryParameter("", "").DataType("")).
+		// spec a spec query condition (the param stay in header)
 		Param(ws.HeaderParameter("", "").DataType("")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
+		// the server will provide object-instance for client
 		Writes([]{{.Model.Name}}{}).
 		Returns(200, "OK", []{{.Model.Name}}{}))
+		Returns(404, "Not Found", nil))
 
 	ws.Route(ws.GET("/{id}").To(s.get).
 		// docs
 		Doc("get a {{.Service.Kind}}").
+		// spec a useful filter
 		Filter(s.measureTime).
+		// spec a spec query condition (the param stay in params)
 		Param(ws.PathParameter("id", "identifier of the {{.Service.Kind}}").DataType("string")).
-		// set more rich query condition
-		Param(ws.QueryParameter("", "").DataType("")).
-		// set more rich header 
-		Param(ws.HeaderParameter("", "").DataType("")).
+		// TODO: QueryParameter 
+		// TODO: HeaderParameter 
 		Metadata(restfulspec.KeyOpenAPITags, tags).
+		// the server will provide the object-instance
 		Writes({{.Model.Name}}{}). // on the response
 		Returns(200, "OK", {{.Model.Name}}{}).
 		Returns(404, "Not Found", nil))
