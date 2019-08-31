@@ -27,16 +27,11 @@ func (g *webServiceGenerator) generate() error {
 		return errors.WithMessage(err, "generate wsFunc")
 	}
 
-	if err := g.generateBusinessFunc(); err != nil {
+	if err := g.generateHandleFunc(); err != nil {
 		return errors.WithMessage(err, "generate wsFunc")
 	}
 	return nil
 
-}
-
-func (g *webServiceGenerator) generateBusinessFunc() error {
-
-	return nil
 }
 
 func (g *webServiceGenerator) generateType() error {
@@ -111,9 +106,9 @@ func (s *{{.Service.Type}}) intallWebService(){
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads({{.Model.Name}}{})) // from the request
 
-	ws.Route(ws.GET("/").To(s.getAll).
+	ws.Route(ws.GET("/").To(s.list).
 		// docs
-		Doc("get all {{.Service.Kind}}").
+		Doc("list {{.Service.Kind}}").
 		// spec a useful filter 
 		Filter(s.measureTime).
 		// spec a spec query condition (the param stay in params)
@@ -166,7 +161,23 @@ func (s *{{.Service.Type}}) intallWebService(){
 	return nil
 }
 
-func (g *webServiceGenerator) generateFunc() error {
+func (g *webServiceGenerator) generateHandleFunc() error {
 
+	const tmplt = `
+func (s *{{.Service.Type}})create(request *restful.Request, response *restful.Response){}
+func (s *{{.Service.Type}})patch(request *restful.Request, response *restful.Response){}
+func (s *{{.Service.Type}})list(request *restful.Request, response *restful.Response){}
+func (s *{{.Service.Type}})get(request *restful.Request, response *restful.Response){}
+func (s *{{.Service.Type}})delete(request *restful.Request, response *restful.Response){}
+func (s *{{.Service.Type}})update(request *restful.Request, response *restful.Response){}
+`
+
+	t, err := template.New("basic-handler-template").Parse(tmplt)
+	if err != nil {
+		return errors.WithMessage(err, "parse template")
+	}
+	if err := t.Execute(g.cache, g.config); err != nil {
+		return errors.WithMessage(err, "execute template")
+	}
 	return nil
 }
