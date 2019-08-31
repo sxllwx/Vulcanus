@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"io"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -75,7 +76,7 @@ func (s *{{.Service.Type}})RegisterOpenAPI(swaggerRootDoc *spec.Swagger){
 		APIPath:     "/apidocs.json",
 		PostBuildSwaggerObjectHandler: s.richSwaggerDoc,
 	}
-	s.Container.Add(restfulspec.NewOpenAPIService(config))
+	s.container.Add(restfulspec.NewOpenAPIService(config))
 }`
 
 	t, err := template.New("OpenAPITemplate").Parse(tmplt)
@@ -84,6 +85,15 @@ func (s *{{.Service.Type}})RegisterOpenAPI(swaggerRootDoc *spec.Swagger){
 	}
 	if err := t.Execute(g.cache, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
+	}
+	return nil
+}
+
+func (g *swaggerInfoGenerator) Flush(w io.Writer) error {
+
+	_, err := g.cache.WriteTo(w)
+	if err != nil {
+		return errors.WithMessage(err, "flush to io.writer")
 	}
 	return nil
 }

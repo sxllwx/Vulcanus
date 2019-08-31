@@ -2,8 +2,10 @@ package server
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
+	"io"
 	"text/template"
+
+	"github.com/pkg/errors"
 )
 
 type webServiceGenerator struct {
@@ -178,6 +180,15 @@ func (s *{{.Service.Type}})update(request *restful.Request, response *restful.Re
 	}
 	if err := t.Execute(g.cache, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
+	}
+	return nil
+}
+
+func (g *webServiceGenerator) Flush(w io.Writer) error {
+
+	_, err := g.cache.WriteTo(w)
+	if err != nil {
+		return errors.WithMessage(err, "flush to io.writer")
 	}
 	return nil
 }
