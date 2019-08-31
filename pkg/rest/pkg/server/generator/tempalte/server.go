@@ -9,7 +9,7 @@ type GolangType struct {
 type Server struct {
 	APIVersion string
 	Resource   string
-	Filters     []restful.FilterFunction
+	Filters    []restful.FilterFunction
 	Model      GolangType
 	ModelList  []GolangType
 }

@@ -6,6 +6,6 @@ type User struct {
 	Age  string
 }
 
-func (u *User)GetName()string{
+func (u *User) GetName() string {
 	return ""
 }

@@ -60,4 +60,3 @@ func (g *Generator) generateTitle() {
 	g.Printf("\n")
 	g.Printf("import \"strconv\"\n") // Used by all methods.
 }
-

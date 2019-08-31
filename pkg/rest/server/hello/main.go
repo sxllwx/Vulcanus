@@ -1,6 +1,5 @@
 package hello
 
-
-func A(){
+func A() {
 
 }

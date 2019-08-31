@@ -41,11 +41,9 @@ func main() {
 			continue
 		}
 
-
 		log.Infof("%s", e.Name())
 		log.Infof("%#v", e)
 	}
-
 
 	doc.New(g.pkg, ".", 0)
 	// log.Infof("%#v", g.pkg.Types.Scope().Lookup("User"))
