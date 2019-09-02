@@ -1,49 +1,11 @@
-package server
+package scaffold
 
 import (
 	"io"
 	"os"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
-
-type option struct {
-
-	// src-code package name
-	pkg string
-
-	// webservice manage which kind of resource
-	kind string
-}
-
-func (o *option) run(cmd *cobra.Command, args []string) error {
-
-	s := NewService(o.kind)
-	a := NewAuthor("", "", "")
-	p := NewPackage(o.pkg)
-	m := NewModel(UpperKind(o.kind))
-
-	og := NewOpenAPIGenerator(p, s, a)
-	sg := NewWebServiceGenerator(p, s, m)
-	return Generate(og, sg)
-}
-
-func New() *cobra.Command {
-
-	o := &option{}
-	cmd := &cobra.Command{
-		Use:   "server",
-		Short: "use to generate server code",
-		RunE:  o.run,
-	}
-
-	cmd.Flags().StringVarP(&o.kind, "kind", "k", "", "your awesome webservice manage the kind of resource")
-	cmd.MarkFlagRequired("kind")
-	cmd.Flags().StringVarP(&o.pkg, "package", "p", "", "your awesome package")
-	cmd.MarkFlagRequired("package")
-	return cmd
-}
 
 type Generator interface {
 	Generate() error

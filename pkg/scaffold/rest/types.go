@@ -1,4 +1,4 @@
-package server
+package rest
 
 import (
 	"fmt"
@@ -6,11 +6,7 @@ import (
 	"strings"
 )
 
-const (
-	resourceTypeSuffix    = "Manager"
-	openAPISuggestName    = "open-api.go"
-	webServiceSuggestName = "web-service.go"
-)
+const resourceTypeSuffix = "Manager"
 
 type Package struct {
 	Name string

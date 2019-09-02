@@ -1,4 +1,4 @@
-package server
+package ws
 
 import (
 	"io/ioutil"
@@ -8,9 +8,9 @@ import (
 func TestWS(t *testing.T) {
 
 	s := NewService("books")
-	p := NewPackage("server")
+	p := NewPackage("main")
 	m := NewModel("Book")
-	wsG := NewWebServiceGenerator(p, s, m)
+	wsG := NewWebService(p, s, m)
 
 	if err := wsG.Generate(); err != nil {
 		t.Fatal(err)

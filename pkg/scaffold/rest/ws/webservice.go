@@ -1,11 +1,15 @@
-package server
+package ws
 
 import (
 	"bytes"
+	"github.com/sxllwx/vulcanus/pkg/scaffold"
 	"text/template"
 
 	"github.com/pkg/errors"
+	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"
 )
+
+const webServiceSuggestName = "web-service.go"
 
 type webServiceGenerator struct {
 	*bytes.Buffer
@@ -13,12 +17,12 @@ type webServiceGenerator struct {
 }
 
 type webServiceConfig struct {
-	Package *Package
-	Service *Service
-	Model   *Model
+	Package *rest.Package
+	Service *rest.Service
+	Model   *rest.Model
 }
 
-func NewWebServiceGenerator(p *Package, s *Service, m *Model) Generator {
+func NewWebService(p *rest.Package, s *rest.Service, m *rest.Model) scaffold.Generator {
 
 	return &webServiceGenerator{
 		Buffer: &bytes.Buffer{},

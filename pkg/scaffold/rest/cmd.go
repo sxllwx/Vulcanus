@@ -2,7 +2,7 @@ package rest
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sxllwx/vulcanus/pkg/scaffold/rest/server"
+	"github.com/sxllwx/vulcanus/pkg/scaffold"
 )
 
 //  rest command
@@ -16,9 +16,13 @@ var restCommand = &cobra.Command{
 	},
 }
 
-// New
-// get the rest cmd
-func New() *cobra.Command {
-	restCommand.AddCommand(server.New())
-	return restCommand
+// register rest cmd -> scaffold cmd
+func init() {
+	scaffold.Cmd().AddCommand(restCommand)
+}
+
+// Register
+// register the rest command to root-cmd
+func Register(cmds ...*cobra.Command) {
+	restCommand.AddCommand(cmds...)
 }
