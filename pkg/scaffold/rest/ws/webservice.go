@@ -101,7 +101,6 @@ func New{{.Service.Type}}(c *restful.Container){
    }
 
    s.installWebService()
-   s.RegisterOpenAPI()
 }
 `
 
