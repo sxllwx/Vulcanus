@@ -59,7 +59,7 @@ func main(){
    c := NewContainer()
 
    // 把你帅气的WebService添加到Container
-   NewBooksManager(c)
+   api.NewBooksManager(c)
    // 注册 open-api 对象
    RegisterOpenAPI(c)
 
