@@ -3,13 +3,15 @@ package ws
 import (
 	"io/ioutil"
 	"testing"
+
+	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"
 )
 
 func TestWS(t *testing.T) {
 
-	s := NewService("books")
-	p := NewPackage("main")
-	m := NewModel("Book")
+	s := rest.NewService("books")
+	p := rest.NewPackage("main")
+	m := rest.NewModel("Book")
 	wsG := NewWebService(p, s, m)
 
 	if err := wsG.Generate(); err != nil {
