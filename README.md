@@ -74,6 +74,6 @@ ok，```go build```
 
 #### 为了让我们的REST-style server 更帅气，给他安排一下Swagger
 
-docker run -it -p 8080:8080 -e API_URL=http://{你的IP}:8080/apidocs.json swaggerapi/swagger-ui
+docker run -it -p 80:8080 -e API_URL=http://{你的IP}:8080/apidocs.json swaggerapi/swagger-ui
 
 打开浏览器，帅气的REST-style的Server已经启动
