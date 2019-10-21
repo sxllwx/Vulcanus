@@ -28,7 +28,7 @@ var (
 type Options struct {
 	name      string
 	endpoints []string
-	timeout   time.Duration
+	timeout   int
 	heartbeat int // heartbeat second
 
 	logger *log.Logger
@@ -46,7 +46,7 @@ func WithName(name string) Option {
 		opt.name = name
 	}
 }
-func WithTimeout(timeout time.Duration) Option {
+func WithTimeout(timeout int) Option {
 	return func(opt *Options) {
 		opt.timeout = timeout
 	}
@@ -221,7 +221,7 @@ func NewEtcdV3Storage(opts ...Option) (storage.Interface, error) {
 	rawClient, err := clientv3.New(clientv3.Config{
 		Context:     ctx,
 		Endpoints:   o.endpoints,
-		DialTimeout: o.timeout,
+		DialTimeout: time.Duration(o.timeout) * time.Second,
 		DialOptions: []grpc.DialOption{grpc.WithBlock()},
 	})
 	if err != nil {
