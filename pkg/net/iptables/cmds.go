@@ -19,7 +19,10 @@ const (
 
 // default chain
 const (
-	BlackListChainName = "BLACK-LIST"
+	BlackListChainName   = "BLACK-LIST"
+	PREROUTINGChainName  = "PREROUTING"
+	POSTROUTINGChainName = "POSTROUTING"
+	INPUTChainName       = "INPUT"
 )
 
 type IPTableManager struct {
