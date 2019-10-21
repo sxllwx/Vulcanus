@@ -68,7 +68,7 @@ func (t *IPTableManager) DNAT(chain string, rule DNATRule) ([]byte, error) {
 		"-p", "tcp",
 		"--dport", rule.DPort,
 		"-j", "DNAT",
-		"-to-destination", fmt.Sprintf("%s:%s", rule.ToHost, rule.ToPort),
+		"--to-destination", fmt.Sprintf("%s:%s", rule.ToHost, rule.ToPort),
 	)
 
 	if err != nil {
