@@ -20,6 +20,10 @@ func NewClient(cfg *Config) host.Interface {
 	}
 }
 
+func (l *Client) Close() error {
+	return nil
+}
+
 func (l *Client) Execute(rootCommand string, args ...string) ([]byte, error) {
 
 	buff := &bytes.Buffer{}

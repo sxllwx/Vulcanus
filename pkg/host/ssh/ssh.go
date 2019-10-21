@@ -12,6 +12,7 @@ import (
 type Client struct {
 	cfg     *Config
 	session *ssh.Session
+	client  *ssh.Client
 }
 
 type Config struct {
@@ -53,8 +54,16 @@ func NewClient(cfg *Config) (host.Interface, error) {
 	return &Client{
 		cfg:     cfg,
 		session: s,
+		client:  clt,
 	}, nil
 
+}
+
+func (c *Client) Close() error {
+
+	c.session.Close()
+	c.client.Close()
+	return nil
 }
 
 func (c *Client) Execute(rootCommand string, args ...string) ([]byte, error) {
