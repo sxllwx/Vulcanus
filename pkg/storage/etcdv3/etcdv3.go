@@ -231,7 +231,7 @@ func NewEtcdV3Storage(opts ...Option) (storage.Interface, error) {
 	c := &Client{
 
 		name:      o.name,
-		timeout:   o.timeout,
+		timeout:   time.Duration(o.timeout) * time.Second,
 		endpoints: o.endpoints,
 		heartbeat: o.heartbeat,
 
