@@ -34,7 +34,7 @@ func NewIPTableManager(runner func(cmd string, args ...string) ([]byte, error)) 
 	return m
 }
 
-func (t *IPTableManager) NewChain(table string, chain string) ([]byte, error) {
+func (t *IPTableManager) NewChain(table string, nativeChain string, chain string) ([]byte, error) {
 
 	out, err := t.Runner(
 		iptablesCommand,
@@ -42,7 +42,16 @@ func (t *IPTableManager) NewChain(table string, chain string) ([]byte, error) {
 		"-N", chain,
 	)
 	if err != nil {
-		return out, errors.Annotatef(err, "new chain %s in table %s, the sys-out %s", chain, table, out)
+		return out, errors.Annotate(err, "execute new chain command")
+	}
+	out, err = t.Runner(
+		iptablesCommand,
+		"-t", table,
+		"-I", nativeChain,
+		"-j", chain,
+	)
+	if err != nil {
+		return out, errors.Annotate(err, "execute insert new chain to native chain command")
 	}
 	return out, nil
 }
@@ -60,7 +69,7 @@ func (t *IPTableManager) DNAT(chain string, rule DNATRule) ([]byte, error) {
 	)
 
 	if err != nil {
-		return out, errors.Annotatef(err, "new dnat rule %#v in chain %s, the sys-out %s", rule, chain, out)
+		return out, errors.Annotate(err, "execute dnat command")
 	}
 	return out, nil
 
@@ -78,7 +87,7 @@ func (t *IPTableManager) SNAT(chain string, rule SNATRule) ([]byte, error) {
 	)
 
 	if err != nil {
-		return out, errors.Annotatef(err, "new snat rule %#v in chain %s, the sys-out %s", rule, chain, out)
+		return out, errors.Annotate(err, "execute snat command")
 	}
 	return out, nil
 }

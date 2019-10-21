@@ -15,7 +15,7 @@ func TestNewIPTableManager(t *testing.T) {
 
 	m := localIPTablesManager()
 
-	out, err := m.NewChain(FilterTableName, BlackListChainName)
+	out, err := m.NewChain(FilterTableName, "INPUT", BlackListChainName)
 	if err != nil {
 		t.Fatal(err)
 	}
