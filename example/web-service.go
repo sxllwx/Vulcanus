@@ -9,68 +9,69 @@ import (
 
 // alias the client & server communicate model
 // TODO: Fix the struct{} ->  real model
-type Book = struct{}
+type Books = struct{}
 
-// bookManagerManager
+// booksManagerManager
 // used to manage resource
-type bookManager struct {
-	ws        *restful.WebService
-	container *restful.Container
+type booksManager struct {
+	ws *restful.WebService
+	// TODO: add other useful field
 }
 
-func NewbookManager(c *restful.Container) {
-
-	s := &bookManager{
-		container: c,
-	}
-
+func NewbooksManager() *booksManager {
+	s := &booksManager{}
 	s.installWebService()
+	return s
 }
 
-func (s *bookManager) measureTime(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+func (s *booksManager) WebService() *restful.WebService {
+	return s.ws
+}
+
+func (s *booksManager) measureTime(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	now := time.Now()
 	chain.ProcessFilter(req, resp)
 	time.Now().Sub(now)
 }
 
-func (s *bookManager) installWebService() {
+func (s *booksManager) installWebService() {
 	ws := new(restful.WebService)
 	ws.
-		Path("/apis/v1.0.0/book").
+		Path("/apis/v1.0.0/books").
 		Consumes(restful.MIME_XML, restful.MIME_JSON).
 		Produces(restful.MIME_JSON, restful.MIME_XML)
 
-	tags := []string{"book"}
+	tags := []string{"books"}
 
 	ws.Route(ws.POST("").To(s.create).
 		// docs
-		Doc("create a book").
+		Doc("create a books").
 		Filter(s.measureTime).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(Book{})) // from the request
+		Reads(Books{})) // from the request
 
 	ws.Route(ws.PATCH("").To(s.patch).
 		// docs
-		Doc("patch a book").
+		Doc("patch a books").
 		Filter(s.measureTime).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads([]byte{})) // from the request
 
 	ws.Route(ws.PUT("/{id}").To(s.update).
 		// docs
-		Doc("update a book").
+		Doc("update a books").
 		Filter(s.measureTime).
-		Param(ws.PathParameter("id", "identifier of the book").DataType("string")).
+		Param(ws.PathParameter("id", "identifier of the books").DataType("string")).
 		// set more rich query condition
 		Param(ws.QueryParameter("", "").DataType("")).
 		// set more rich header
 		Param(ws.HeaderParameter("", "").DataType("")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(Book{})) // from the request
+		Reads(Books{})) // from the request
 
 	ws.Route(ws.GET("/").To(s.list).
 		// docs
-		Doc("list book").
+		Doc("list books").
 		// spec a useful filter
 		Filter(s.measureTime).
 		// spec a spec query condition (the param stay in params)
@@ -79,39 +80,38 @@ func (s *bookManager) installWebService() {
 		Param(ws.HeaderParameter("", "").DataType("")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		// the server will provide object-instance for client
-		Writes([]Book{}).
-		Returns(200, "OK", []Book{}).
+		Writes([]Books{}).
+		Returns(200, "OK", []Books{}).
 		Returns(404, "Not Found", nil))
 
 	ws.Route(ws.GET("/{id}").To(s.get).
 		// docs
-		Doc("get a book").
+		Doc("get a books").
 		// spec a useful filter
 		Filter(s.measureTime).
 		// spec a spec query condition (the param stay in params)
-		Param(ws.PathParameter("id", "identifier of the book").DataType("string")).
+		Param(ws.PathParameter("id", "identifier of the books").DataType("string")).
 		// TODO: QueryParameter
 		// TODO: HeaderParameter
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		// the server will provide the object-instance
-		Writes(Book{}). // on the response
-		Returns(200, "OK", Book{}).
+		Writes(Books{}). // on the response
+		Returns(200, "OK", Books{}).
 		Returns(404, "Not Found", nil))
 
 	ws.Route(ws.DELETE("/{id}").To(s.delete).
 		// docs
-		Doc("delete a book").
+		Doc("delete a books").
 		Filter(s.measureTime).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Param(ws.PathParameter("id", "identifier of the book").DataType("string")))
+		Param(ws.PathParameter("id", "identifier of the books").DataType("string")))
 
 	s.ws = ws
-	s.container.Add(ws)
 }
 
-func (s *bookManager) create(request *restful.Request, response *restful.Response) {}
-func (s *bookManager) patch(request *restful.Request, response *restful.Response)  {}
-func (s *bookManager) list(request *restful.Request, response *restful.Response)   {}
-func (s *bookManager) get(request *restful.Request, response *restful.Response)    {}
-func (s *bookManager) delete(request *restful.Request, response *restful.Response) {}
-func (s *bookManager) update(request *restful.Request, response *restful.Response) {}
+func (s *booksManager) create(request *restful.Request, response *restful.Response) {}
+func (s *booksManager) patch(request *restful.Request, response *restful.Response)  {}
+func (s *booksManager) list(request *restful.Request, response *restful.Response)   {}
+func (s *booksManager) get(request *restful.Request, response *restful.Response)    {}
+func (s *booksManager) delete(request *restful.Request, response *restful.Response) {}
+func (s *booksManager) update(request *restful.Request, response *restful.Response) {}

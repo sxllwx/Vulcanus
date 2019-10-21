@@ -56,16 +56,18 @@ RESOURCE_KIND 为该 REST-style Server 管理的资源的类型(比如，Books�
 
 func main(){
 
-   c := NewContainer()
+	c := NewContainer()
 
-   // 把你帅气的WebService添加到Container
-   api.NewBooksManager(c)
-   // 注册 open-api 对象
-   RegisterOpenAPI(c)
+	// add web service
+	m := NewbooksManager()
+	c.Add(m.WebService())
 
-   if err := http.ListenAndServe(":8080", c); err != nil{
-        panic(err)
-   }
+	// regiser open api spec
+	RegisterOpenAPI(c)
+
+	if err := http.ListenAndServe(":8080", c); err != nil {
+		panic(err)
+	}
 }
 
 ```

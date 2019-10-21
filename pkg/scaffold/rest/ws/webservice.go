@@ -75,7 +75,7 @@ type {{.Model.Name}} = struct{}
 // used to manage resource
 type {{.Service.Type}} struct{
    ws *restful.WebService
-   container *restful.Container
+   // TODO: add other useful field
 }
 `
 
@@ -94,13 +94,14 @@ func (g *webServiceGenerator) generateConstructorFunc() error {
 
 	const tmplt = `
 
-func New{{.Service.Type}}(c *restful.Container){
-
-   s := &{{.Service.Type}}{
-       container: c,
-   }
-
+func New{{.Service.Type}}()*{{.Service.Type}}{
+   s := &{{.Service.Type}}{}
    s.installWebService()
+   return s
+}
+
+func (s *{{.Service.Type}}) WebService()*restful.WebService{
+	return s.ws
 }
 `
 
@@ -199,7 +200,6 @@ func (s *{{.Service.Type}}) installWebService(){
 		Param(ws.PathParameter("id", "identifier of the {{.Service.Kind}}").DataType("string")))
 
 	s.ws = ws
-	s.container.Add(ws)
 }
 `
 

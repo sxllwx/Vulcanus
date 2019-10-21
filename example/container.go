@@ -1,10 +1,11 @@
 package main
 
 import (
+	"net/http"
+
 	restful "github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
-	"net/http"
 )
 
 // NewContainer
@@ -41,8 +42,8 @@ func richSwaggerDoc(swaggerRootDoc *spec.Swagger) {
 	// TODO: Fix Author Info
 	swaggerRootDoc.Info = &spec.Info{
 		InfoProps: spec.InfoProps{
-			Title:       "BookManagerService",
-			Description: "resource for managing book",
+			Title:       "BooksManagerService",
+			Description: "resource for managing books",
 			Contact: &spec.ContactInfo{
 				Name:  "scott.wang",
 				Email: "scottwangsxll@gmail.com",
@@ -52,16 +53,21 @@ func richSwaggerDoc(swaggerRootDoc *spec.Swagger) {
 		},
 	}
 	swaggerRootDoc.Tags = []spec.Tag{spec.Tag{TagProps: spec.TagProps{
-		Name:        "book",
-		Description: "Managing book",
+		Name:        "books",
+		Description: "Managing books",
 	}}}
 }
 
-// ADD by scott.wang
+// add by scott.wang
 func main() {
 
 	c := NewContainer()
-	NewbookManager(c)
+
+	// add web service
+	m := NewbooksManager()
+	c.Add(m.WebService())
+
+	// regiser open api spec
 	RegisterOpenAPI(c)
 
 	if err := http.ListenAndServe(":8080", c); err != nil {
