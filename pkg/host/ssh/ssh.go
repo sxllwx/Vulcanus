@@ -46,22 +46,15 @@ func NewClient(cfg *Config) (host.Interface, error) {
 		return nil, errors.Annotate(err, "dial")
 	}
 
-	s, err := clt.NewSession()
-	if err != nil {
-		return nil, errors.Annotate(err, "new session")
-	}
-
 	return &Client{
-		cfg:     cfg,
-		session: s,
-		client:  clt,
+		cfg:    cfg,
+		client: clt,
 	}, nil
 
 }
 
 func (c *Client) Close() error {
 
-	c.session.Close()
 	c.client.Close()
 	return nil
 }
@@ -75,7 +68,13 @@ func (c *Client) Execute(rootCommand string, args ...string) ([]byte, error) {
 		buff.WriteString(a)
 	}
 
-	out, err := c.session.CombinedOutput(buff.String())
+	s, err := c.client.NewSession()
+	if err != nil {
+		return nil, errors.Annotate(err, "new session")
+	}
+	defer s.Close()
+
+	out, err := s.CombinedOutput(buff.String())
 	if err != nil {
 		return nil, errors.Annotate(err, "run cmd")
 	}
