@@ -2,12 +2,10 @@ package etcdv3
 
 import (
 	"bytes"
+	"github.com/sxllwx/vulcanus/pkg/storage"
 	"log"
 	"os"
 	"testing"
-	"time"
-
-	"github.com/sxllwx/vulcanus/pkg/storage"
 )
 
 var l = log.New(os.Stdout, "test", log.Llongfile)
@@ -18,7 +16,7 @@ func newDefaultStorage() (storage.Interface, error) {
 		WithHeartbeat(1),
 		WithEndpoints("localhost:2379"),
 		WithLogger(l),
-		WithTimeout(time.Second))
+		WithTimeout(1))
 
 	return s, err
 }
