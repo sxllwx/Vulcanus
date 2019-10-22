@@ -49,7 +49,7 @@ func richSwaggerDoc(swaggerRootDoc *spec.Swagger) {
 				Email: "scottwangsxll@gmail.com",
 				URL:   "https://github.com/sxllwx",
 			},
-			Version: "v1.0.0",
+			Version: "v1.0",
 		},
 	}
 	swaggerRootDoc.Tags = []spec.Tag{spec.Tag{TagProps: spec.TagProps{
@@ -58,7 +58,6 @@ func richSwaggerDoc(swaggerRootDoc *spec.Swagger) {
 	}}}
 }
 
-// add by scott.wang
 func main() {
 
 	c := NewContainer()
@@ -73,5 +72,4 @@ func main() {
 	if err := http.ListenAndServe(":8080", c); err != nil {
 		panic(err)
 	}
-
 }

@@ -9,7 +9,9 @@ import (
 
 // alias the client & server communicate model
 // TODO: Fix the struct{} ->  real model
-type Books = struct{}
+type Books struct {
+	Name string
+}
 
 // booksManagerManager
 // used to manage resource
@@ -37,7 +39,7 @@ func (s *booksManager) measureTime(req *restful.Request, resp *restful.Response,
 func (s *booksManager) installWebService() {
 	ws := new(restful.WebService)
 	ws.
-		Path("/apis/v1.0.0/books").
+		Path("/api/v1.0/books").
 		Consumes(restful.MIME_XML, restful.MIME_JSON).
 		Produces(restful.MIME_JSON, restful.MIME_XML)
 
@@ -112,6 +114,13 @@ func (s *booksManager) installWebService() {
 func (s *booksManager) create(request *restful.Request, response *restful.Response) {}
 func (s *booksManager) patch(request *restful.Request, response *restful.Response)  {}
 func (s *booksManager) list(request *restful.Request, response *restful.Response)   {}
-func (s *booksManager) get(request *restful.Request, response *restful.Response)    {}
+func (s *booksManager) get(request *restful.Request, response *restful.Response) {
+
+	if request.PathParameter("id") == "scott" {
+		time.Sleep(time.Minute)
+	}
+	response.Write([]byte("hello"))
+	return
+}
 func (s *booksManager) delete(request *restful.Request, response *restful.Response) {}
 func (s *booksManager) update(request *restful.Request, response *restful.Response) {}

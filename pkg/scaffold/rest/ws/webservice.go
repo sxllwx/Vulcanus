@@ -119,7 +119,7 @@ func (s *{{.Service.Type}}) WebService()*restful.WebService{
 func (g *webServiceGenerator) generateWsFunc() error {
 
 	const tmplt = `
-func (s *{{.Service.Type}}) measureTime(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+func (s *{{.Service.Type}}) measureTime(req *restful.request, resp *restful.Response, chain *restful.FilterChain) {
 	now := time.Now()
 	chain.ProcessFilter(req, resp)
 	time.Now().Sub(now)
@@ -217,12 +217,12 @@ func (s *{{.Service.Type}}) installWebService(){
 func (g *webServiceGenerator) generateHandleFunc() error {
 
 	const tmplt = `
-func (s *{{.Service.Type}})create(request *restful.Request, response *restful.Response){}
-func (s *{{.Service.Type}})patch(request *restful.Request, response *restful.Response){}
-func (s *{{.Service.Type}})list(request *restful.Request, response *restful.Response){}
-func (s *{{.Service.Type}})get(request *restful.Request, response *restful.Response){}
-func (s *{{.Service.Type}})delete(request *restful.Request, response *restful.Response){}
-func (s *{{.Service.Type}})update(request *restful.Request, response *restful.Response){}
+func (s *{{.Service.Type}})create(request *restful.request, response *restful.Response){}
+func (s *{{.Service.Type}})patch(request *restful.request, response *restful.Response){}
+func (s *{{.Service.Type}})list(request *restful.request, response *restful.Response){}
+func (s *{{.Service.Type}})get(request *restful.request, response *restful.Response){}
+func (s *{{.Service.Type}})delete(request *restful.request, response *restful.Response){}
+func (s *{{.Service.Type}})update(request *restful.request, response *restful.Response){}
 `
 
 	t, err := template.New("basic-handler-template").Parse(tmplt)
