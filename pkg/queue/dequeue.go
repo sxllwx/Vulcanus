@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var ErrQueueAlreadyStop = errors.New("queue already stop")
+var ErrQueueAlreadyStopped = errors.New("queue already stop")
 
 type DoubleEndQueue interface {
 	InsertToHeader(interface{}) error
@@ -46,7 +46,7 @@ func (q *deque) InsertToHeader(o interface{}) error {
 
 	select {
 	case <-q.done:
-		return ErrQueueAlreadyStop
+		return ErrQueueAlreadyStopped
 	default:
 	}
 
@@ -61,7 +61,7 @@ func (q *deque) InsertToTail(o interface{}) error {
 
 	select {
 	case <-q.done:
-		return ErrQueueAlreadyStop
+		return ErrQueueAlreadyStopped
 	default:
 	}
 
@@ -77,7 +77,7 @@ func (q *deque) PopFromHeader() (interface{}, error) {
 
 	select {
 	case <-q.done:
-		return nil, ErrQueueAlreadyStop
+		return nil, ErrQueueAlreadyStopped
 	default:
 	}
 
@@ -98,7 +98,7 @@ func (q *deque) PopFromTail() (interface{}, error) {
 
 	select {
 	case <-q.done:
-		return nil, ErrQueueAlreadyStop
+		return nil, ErrQueueAlreadyStopped
 	default:
 	}
 
