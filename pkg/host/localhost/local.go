@@ -1,7 +1,7 @@
 package localhost
 
 import (
-	"bytes"
+	"log"
 	"os/exec"
 
 	"github.com/juju/errors"
@@ -9,14 +9,17 @@ import (
 )
 
 type Client struct {
-	cfg *Config
+	cfg    *Config
+	logger *log.Logger
 }
+
 type Config struct{}
 
-func NewClient(cfg *Config) host.Interface {
+func NewClient(cfg *Config, l *log.Logger) host.Interface {
 
 	return &Client{
-		cfg: cfg,
+		cfg:    cfg,
+		logger: l,
 	}
 }
 
@@ -26,17 +29,12 @@ func (l *Client) Close() error {
 
 func (l *Client) Execute(rootCommand string, args ...string) ([]byte, error) {
 
-	buff := &bytes.Buffer{}
-	buff.WriteString(rootCommand)
-	for _, a := range args {
-		buff.WriteString(" ")
-		buff.WriteString(a)
-	}
-
 	out, err := exec.Command(rootCommand, args...).CombinedOutput()
 	if err != nil {
-		return nil, errors.Annotate(err, "execute")
+		l.logger.Printf("localhost execute (%s, %+v) faild, the err {%s} os output %s", rootCommand, args, err, out)
+		return out, errors.Annotatef(err, "run command, os output %s", out)
 	}
 
+	l.logger.Printf("localhost execute (%s, %v) success, the os output %s", rootCommand, args, out)
 	return out, nil
 }

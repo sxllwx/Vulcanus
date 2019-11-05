@@ -3,6 +3,7 @@ package ssh
 import (
 	"bytes"
 	"io/ioutil"
+	"log"
 
 	"github.com/juju/errors"
 	"github.com/sxllwx/vulcanus/pkg/host"
@@ -13,6 +14,7 @@ type Client struct {
 	cfg     *Config
 	session *ssh.Session
 	client  *ssh.Client
+	logger  *log.Logger
 }
 
 type Config struct {
@@ -21,7 +23,7 @@ type Config struct {
 	PrivateKeyFile string
 }
 
-func NewClient(cfg *Config) (host.Interface, error) {
+func NewClient(cfg *Config, l *log.Logger) (host.Interface, error) {
 
 	key, err := ioutil.ReadFile(cfg.PrivateKeyFile)
 	if err != nil {
@@ -49,6 +51,7 @@ func NewClient(cfg *Config) (host.Interface, error) {
 	return &Client{
 		cfg:    cfg,
 		client: clt,
+		logger: l,
 	}, nil
 
 }
@@ -76,8 +79,10 @@ func (c *Client) Execute(rootCommand string, args ...string) ([]byte, error) {
 
 	out, err := s.CombinedOutput(buff.String())
 	if err != nil {
-		return nil, errors.Annotate(err, "run cmd")
+		c.logger.Printf("%s execute (%s, %+v) faild, the err {%s} os output %s", c.cfg.Remote, rootCommand, args, err, out)
+		return out, errors.Annotatef(err, "run cmd, os output %s", out)
 	}
 
+	c.logger.Printf("%s execute (%s, %+v) success, the os output %s", c.cfg.Remote, rootCommand, args, out)
 	return out, nil
 }

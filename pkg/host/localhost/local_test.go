@@ -1,6 +1,8 @@
 package localhost
 
 import (
+	"log"
+	"os"
 	"testing"
 )
 
@@ -8,9 +10,11 @@ var cfg = &Config{}
 
 func TestExecute(t *testing.T) {
 
-	localHost := NewClient(cfg)
+	l := log.New(os.Stdout, "test", log.Lshortfile|log.Ltime)
 
-	out, err := localHost.Execute("docker")
+	localHost := NewClient(cfg, l)
+
+	out, err := localHost.Execute("iptables", "-v")
 	if err != nil {
 		t.Fatal(err)
 	}
