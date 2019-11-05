@@ -192,3 +192,36 @@ func (m *ArgsManager) AppendMASQUERADERuleToChain(
 		"-j", MASQUERADE,
 	)
 }
+
+// FlushAllChain
+// Flush all chain in spec table
+func (m *ArgsManager) FlushAllChain(table string) []string {
+
+	return append(
+		[]string{},
+		"-t", table,
+		"-F",
+	)
+}
+
+// DeleteAllChain
+// Delete all chain in spec table
+func (m *ArgsManager) DeleteAllChain(table string) []string {
+
+	return append(
+		[]string{},
+		"-t", table,
+		"-X",
+	)
+}
+
+// ZeroAllChain
+// Zero all chain in spec table
+func (m *ArgsManager) ZeroAllChain(table string) []string {
+
+	return append(
+		[]string{},
+		"-t", table,
+		"-Z",
+	)
+}

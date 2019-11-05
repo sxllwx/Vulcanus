@@ -41,7 +41,7 @@ func (m *Manager) CreateChainForTable(table string, chain string) error {
 	return nil
 }
 
-func (m *Manager) AppendChainToCoreChain(table string, parent string, chain string, comment string) error {
+func (m *Manager) AppendChainToParentChain(table string, parent string, chain string, comment string) error {
 
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -160,6 +160,38 @@ func (m *Manager) checkRule(table string, chain string, args ...string) error {
 	_, err := m.host.Execute(rootCommand, realArgs...)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *Manager) Reset() error {
+
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	rootCommand := IptablesCommand
+	tables := []string{NATTableName, FilterTableName}
+
+	for _, table := range tables {
+
+		args := m.am.FlushAllChain(table)
+		_, err := m.host.Execute(rootCommand, args...)
+		if err != nil {
+			return errors.Annotatef(err, "iptables flush all chain  in table (%s)", table)
+		}
+
+		args = m.am.ZeroAllChain(table)
+		_, err = m.host.Execute(rootCommand, args...)
+		if err != nil {
+			return errors.Annotatef(err, "iptables zero all chain  in table (%s)", table)
+		}
+
+		args = m.am.ZeroAllChain(table)
+		_, err = m.host.Execute(rootCommand, args...)
+		if err != nil {
+			return errors.Annotatef(err, "iptables zero all chain  in table (%s)", table)
+		}
 	}
 
 	return nil

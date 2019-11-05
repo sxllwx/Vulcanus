@@ -51,7 +51,7 @@ func TestCreateChain(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := m.AppendChainToCoreChain(NATTableName, PREROUTINGChainName, MainChainName, "desktop services portal"); err != nil {
+	if err := m.AppendChainToParentChain(NATTableName, PREROUTINGChainName, MainChainName, "desktop services portal"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -59,7 +59,7 @@ func TestCreateChain(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := m.AppendChainToCoreChain(NATTableName, MainChainName, DesktopA, "desktop-A-service"); err != nil {
+	if err := m.AppendChainToParentChain(NATTableName, MainChainName, DesktopA, "desktop-A-service"); err != nil {
 		t.Fatal(err)
 	}
 
