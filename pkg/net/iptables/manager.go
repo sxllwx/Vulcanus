@@ -187,10 +187,10 @@ func (m *Manager) Reset() error {
 			return errors.Annotatef(err, "iptables zero all chain  in table (%s)", table)
 		}
 
-		args = m.am.ZeroAllChain(table)
+		args = m.am.DeleteAllChain(table)
 		_, err = m.host.Execute(rootCommand, args...)
 		if err != nil {
-			return errors.Annotatef(err, "iptables zero all chain  in table (%s)", table)
+			return errors.Annotatef(err, "iptables delete all chain  in table (%s)", table)
 		}
 	}
 
