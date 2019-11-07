@@ -111,6 +111,7 @@ func newRequest(base url.URL, versionedPath string, verb string) *request {
 		verb:          verb,
 		u:             &base,
 		param:         url.Values{},
+		header:        http.Header{},
 	}
 }
 
@@ -171,7 +172,7 @@ func (r *Result) Process(handleFunc func(*http.Response) error) error {
 	defer r.resp.Body.Close()
 
 	if err := handleFunc(r.resp); err != nil {
-		return errors.Annotate(err, "handle response")
+		return err
 	}
 	return nil
 }
