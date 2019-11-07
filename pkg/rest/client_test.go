@@ -9,7 +9,7 @@ import (
 
 func TestClientGet(t *testing.T) {
 
-	c, err := NewClient("http://localhost:8080", "api/v1.0")
+	c, err := NewClient("http://localhost:8080", "api/v1.0", http.DefaultTransport)
 	if err != nil {
 		t.Fatal(err)
 	}

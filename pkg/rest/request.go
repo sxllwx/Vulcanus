@@ -2,7 +2,6 @@ package rest
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -149,7 +148,6 @@ func (r *request) Do() *Result {
 	// do
 	resp, err := r.client.Do(request)
 	if err != nil {
-		fmt.Printf("%#v", resp)
 		out.err = errors.Annotate(err, "do request")
 		return out
 	}
@@ -170,9 +168,7 @@ func (r *Result) Process(handleFunc func(*http.Response) error) error {
 		return r.err
 	}
 
-	defer func() {
-		fmt.Println(r.resp.Body.Close())
-	}()
+	defer r.resp.Body.Close()
 
 	if err := handleFunc(r.resp); err != nil {
 		return errors.Annotate(err, "handle response")

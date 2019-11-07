@@ -1,12 +1,9 @@
 package rest
 
 import (
-	"net"
+	"github.com/juju/errors"
 	"net/http"
 	"net/url"
-	"time"
-
-	"github.com/juju/errors"
 )
 
 type RESTClient struct {
@@ -35,29 +32,19 @@ func (c *RESTClient) PUT() *request {
 		HTTPClient(c.c)
 }
 
-func NewClient(endpoint string, versionedPath string) (Interface, error) {
+func NewClient(endpoint string, versionedPath string, transport http.RoundTripper) (Interface, error) {
 
 	base, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, errors.Annotate(err, "parse endpoint")
 	}
 
-	tp := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		MaxConnsPerHost:       100,
-		IdleConnTimeout:       90 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+	if transport == nil {
+		transport = http.DefaultTransport
 	}
 
 	c := &http.Client{
-		Transport: tp,
+		Transport: transport,
 	}
 
 	return &RESTClient{
