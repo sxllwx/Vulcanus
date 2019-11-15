@@ -1,77 +1,26 @@
 package queue
 
 import (
-	"fmt"
-	"math/rand"
-	"net/http"
-	_ "net/http/pprof"
-	"sync"
+	"context"
 	"testing"
 	"time"
 )
 
 func TestNewQueue(t *testing.T) {
 
-	go func() {
-		t.Fatal(http.ListenAndServe(":8080", nil))
-	}()
+	for i := 0; i < 10000; i++ {
+		ctx, _ := context.WithTimeout(context.Background(), time.Second)
+		q := New(WithContext(ctx), WithLimiter(notLimit))
 
-	q := NewQueue(func(i []interface{}) bool {
-		if len(i) >= 1000 {
-			return true
+		time.Sleep(2 * time.Second)
+		if q.Append(1) != ErrAlreadyStopped {
+			t.Log(q.Append(1))
+			t.Fatal("the ctx no used")
 		}
-		return false
-	})
-
-	wg := sync.WaitGroup{}
-
-	go func() {
-
-		time.AfterFunc(5*time.Second, func() {
-
-			fmt.Println("i close")
-			ol, err := q.Close()
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println("i closed", ol)
-		})
-
-	}()
-
-	// start the consumer to produce the element
-	for i := 0; i < 100000; i++ {
-
-		wg.Add(1)
-		go func(i int) {
-
-			defer wg.Done()
-			err := q.Append(i)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			fmt.Println("sent ", i)
-		}(i)
+		if _, err := q.Get(); err != ErrAlreadyStopped {
+			t.Log(err)
+			t.Fatal("the ctx no used")
+		}
 	}
-
-	for i := 0; i < 120000; i++ {
-
-		wg.Add(1)
-
-		go func(i int) {
-
-			defer wg.Done()
-			time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
-			o, err := q.GET()
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			fmt.Println("got", o)
-		}(i)
-	}
-	wg.Wait()
 
 }
