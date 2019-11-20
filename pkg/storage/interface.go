@@ -6,13 +6,13 @@ import (
 
 type Interface interface {
 	// put the k/v
-	PUT(key string, data []byte) error
+	Put(key string, data []byte) error
 	// delete the k
 	Delete(key string) error
 	// get the spec key value
-	GET(key string) ([]byte, error)
+	Get(key string) ([]byte, error)
 	// watch the spec key value
-	WATCH(key string) (<-chan *Message, error)
+	Watch(key string) (<-chan *Message, error)
 	// get the object list
 	// key start with prefix
 	List(prefix string) (map[string][]byte, error)

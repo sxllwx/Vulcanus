@@ -110,7 +110,7 @@ func (c *Client) Delete(k string) error {
 	return nil
 }
 
-func (c *Client) PUT(key string, data []byte) error {
+func (c *Client) Put(key string, data []byte) error {
 	err := c.put(key, string(data))
 	if err != nil {
 		return errors.Annotatef(err, "put k/v (key: %s value %s)", key, data)
@@ -118,7 +118,7 @@ func (c *Client) PUT(key string, data []byte) error {
 	return nil
 }
 
-func (c *Client) GET(key string) ([]byte, error) {
+func (c *Client) Get(key string) ([]byte, error) {
 
 	v, err := c.get(key)
 	if err != nil {
@@ -127,7 +127,7 @@ func (c *Client) GET(key string) ([]byte, error) {
 	return []byte(v), nil
 }
 
-func (c *Client) WATCH(key string) (<-chan *storage.Message, error) {
+func (c *Client) Watch(key string) (<-chan *storage.Message, error) {
 
 	out := make(chan *storage.Message, defaultWatchBuf)
 
