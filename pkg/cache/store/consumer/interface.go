@@ -12,7 +12,6 @@ import (
 
 var (
 	ErrConsumerAlreadyStopped = errors.New("the consumer already stopped")
-	ErrConsumerLowEnergy      = errors.New("the consumer low energy")
 )
 
 type RateLimiterBatchConsumer interface {
@@ -74,14 +73,16 @@ func (c *rateLimiterBatchConsumerImpl) Run() {
 			return
 
 		case <-ticker.C:
+
 			c.wg.Add(1)
 
 			go func() {
 
 				defer c.wg.Done()
+
 				out, err := c.getElements()
 				if err != nil {
-					fmt.Println("find thresh-hold", err)
+					fmt.Println("find thresh-hold and put the elements to dirty", err)
 					return
 				}
 
@@ -92,8 +93,9 @@ func (c *rateLimiterBatchConsumerImpl) Run() {
 
 				if err := c.HandleFunc(out); err != nil {
 					c.markAsDirty(out)
-					fmt.Println("handle elements", err)
+					fmt.Println("handle elements and put the elements to dirty", err)
 				}
+
 			}()
 
 		}
@@ -105,7 +107,9 @@ func (c *rateLimiterBatchConsumerImpl) getElements() ([]interface{}, error) {
 	// force find thresh hold
 	bucket, err := c.findThreshHold()
 	if err != nil {
-		c.markAsDirty(bucket)
+		if len(bucket) != 0 {
+			c.markAsDirty(bucket)
+		}
 		return nil, errors.Annotate(err, "find thresh hold")
 	}
 
@@ -121,6 +125,17 @@ func (c *rateLimiterBatchConsumerImpl) updateMaxHandlingCapOneBatch(l int) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.maxHandlingCapOneBatch = l
+}
+
+func (c *rateLimiterBatchConsumerImpl) getDirty() []interface{} {
+
+	var out []interface{}
+
+	c.mu.RLock()
+	out = c.dirty
+	c.mu.RUnlock()
+
+	return out
 }
 
 func (c *rateLimiterBatchConsumerImpl) findThreshHold() ([]interface{}, error) {
@@ -187,7 +202,7 @@ func (c *rateLimiterBatchConsumerImpl) findThreshHold() ([]interface{}, error) {
 
 		err := c.store.Put(e)
 		if err != nil {
-			return append(packaged, rest[i:]), errors.Annotate(err, "revert element")
+			return append(packaged, rest[i:]...), errors.Annotate(err, "revert element")
 		}
 	}
 
@@ -286,16 +301,11 @@ func (c *rateLimiterBatchConsumerImpl) Done() <-chan struct{} {
 
 func (c *rateLimiterBatchConsumerImpl) Close() ([]interface{}, error) {
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if !c.running() {
-		return nil, ErrConsumerAlreadyStopped
-	}
-
 	c.cancel()
+
+	// wait for complete
 	c.wg.Wait()
-	return c.dirty, nil
+	return c.getDirty(), nil
 }
 
 type options struct {
@@ -317,23 +327,13 @@ func WithStore(store supportedStore) Option {
 	}
 }
 
-func NewLimiterBatchConsumer(opts ...Option) *rateLimiterBatchConsumerImpl {
+func NewLimiterBatchConsumer(ctx context.Context, store supportedStore) *rateLimiterBatchConsumerImpl {
 
-	// default setting
-	o := &options{
-		ctx: context.Background(),
-	}
-
-	// apply the opts to queueOptions
-	for _, f := range opts {
-		f(o)
-	}
-
-	ctx, cancel := context.WithCancel(o.ctx)
+	childCtx, cancel := context.WithCancel(ctx)
 	out := &rateLimiterBatchConsumerImpl{
-		ctx:    ctx,
+		ctx:    childCtx,
 		cancel: cancel,
-		store:  o.store,
+		store:  store,
 	}
 
 	return out

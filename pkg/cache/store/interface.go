@@ -140,19 +140,9 @@ func (s *simpleImpl) Done() <-chan struct{} {
 	return s.ctx.Done()
 }
 
-func NewSimpleStore(opts ...Option) Simple {
+func NewSimpleStore(ctx context.Context) Simple {
 
-	// default setting
-	o := &options{
-		ctx: context.Background(),
-	}
-
-	// apply the opts to queueOptions
-	for _, f := range opts {
-		f(o)
-	}
-
-	ctx, cancel := context.WithCancel(o.ctx)
+	ctx, cancel := context.WithCancel(ctx)
 	out := &simpleImpl{
 		ctx:    ctx,
 		cancel: cancel,
