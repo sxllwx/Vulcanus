@@ -59,7 +59,7 @@ func (s *Service) Complete() {
 	s.Version = "v1.0"
 
 	// best practice is /apis/{apiversion}/{kind}
-	s.RootURLPrefix = path.Join("/api", s.Version, s.Kind)
+	s.RootURLPrefix = path.Join("/api", s.Version, fmt.Sprintf("%ss", s.Kind))
 	s.Tag = &Tag{
 		Name:        s.Kind,
 		Description: fmt.Sprintf("Managing %s", s.Kind),
