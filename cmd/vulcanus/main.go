@@ -6,6 +6,7 @@ import (
 
 	"github.com/sxllwx/vulcanus/pkg/scaffold/ca"
 	_ "github.com/sxllwx/vulcanus/pkg/scaffold/ca/init"
+	_ "github.com/sxllwx/vulcanus/pkg/scaffold/ca/sign"
 	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"
 	_ "github.com/sxllwx/vulcanus/pkg/scaffold/rest/container"
 	_ "github.com/sxllwx/vulcanus/pkg/scaffold/rest/ws"

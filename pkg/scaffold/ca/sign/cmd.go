@@ -4,10 +4,12 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
+	"io/ioutil"
+
 	"github.com/juju/errors"
 	"github.com/spf13/cobra"
 	"github.com/sxllwx/vulcanus/pkg/scaffold/ca"
-	"io/ioutil"
 )
 
 type option struct {
@@ -43,6 +45,36 @@ func (o *option) readCAPrivateKey() error {
 
 func (o *option) readCACert() error {
 
+	if o.caCertFile == "" {
+		return errors.New("please spec ca cert file")
+	}
+
+	body, err := ioutil.ReadFile(o.caCertFile)
+	if err != nil {
+		return errors.Annotate(err, "read cert file")
+	}
+
+	block, _ := pem.Decode(body)
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return errors.Annotate(err, "parse cert")
+	}
+
+	o.caCert = cert
+
+	return nil
+}
+
+func (o *option) run() error {
+
+	if err := o.readCAPrivateKey(); err != nil {
+		return errors.Annotate(err, "read ca private key")
+	}
+
+	if err := o.readCACert(); err != nil {
+		return errors.Annotate(err, "read ca cert")
+	}
+
 	return nil
 }
 
@@ -61,6 +93,5 @@ func init() {
 
 	cmd.Flags().StringVarP(&o.caPrivateKeyFile, "ca-private-key-file", "p", "ca-key.pem", "the ca private key file name")
 	cmd.Flags().StringVarP(&o.caCertFile, "ca-cert-file", "c", "ca-cert.pem", "the ca cert file name")
-
 	ca.RootCommand.AddCommand(cmd)
 }
