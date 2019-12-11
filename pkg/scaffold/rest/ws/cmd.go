@@ -39,6 +39,6 @@ func init() {
 	cmd.Flags().StringVarP(&o.pkg, "package", "p", "", "your awesome package")
 	cmd.MarkFlagRequired("package")
 
-	rest.Register(cmd)
+	rest.RootCommand.AddCommand(cmd)
 	return
 }

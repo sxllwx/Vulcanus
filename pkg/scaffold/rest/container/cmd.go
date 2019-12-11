@@ -4,12 +4,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/sxllwx/vulcanus/pkg/scaffold"
-
-	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/sxllwx/vulcanus/pkg/scaffold"
+	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"
 )
 
 type option struct {
@@ -43,7 +41,7 @@ func init() {
 	cmd.MarkFlagRequired("kind")
 	cmd.Flags().StringVarP(&o.pkg, "package", "p", "", "your awesome package")
 	cmd.MarkFlagRequired("package")
-	rest.Register(cmd)
+	rest.RootCommand.AddCommand(cmd)
 	return
 }
 
