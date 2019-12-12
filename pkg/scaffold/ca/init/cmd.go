@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	duration365d          = time.Hour * 24 * 365
 	eCPrivateKeyBlockType = "EC PRIVATE KEY"
 	certBlockType         = "CERTIFICATE"
 )

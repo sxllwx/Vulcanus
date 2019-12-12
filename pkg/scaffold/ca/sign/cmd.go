@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 	"io/ioutil"
 
 	"github.com/juju/errors"
@@ -65,6 +64,9 @@ func (o *option) readCACert() error {
 	return nil
 }
 
+func (o *option) sign() error {
+
+}
 func (o *option) run() error {
 
 	if err := o.readCAPrivateKey(); err != nil {
