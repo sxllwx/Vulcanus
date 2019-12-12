@@ -5,8 +5,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/pem"
 	"math/big"
 	"net"
@@ -34,11 +36,6 @@ const (
 // create a self signed cert
 func SelfSignedCert(key crypto.PrivateKey) (*x509.Certificate, error) {
 
-	var (
-		extraExtensionData       = []byte("extra extension")
-		oidExtensionSubjectKeyId = []int{2, 5, 29, 14}
-	)
-
 	now := time.Now()
 	template := x509.Certificate{
 		SerialNumber: new(big.Int).SetInt64(0),
@@ -49,20 +46,16 @@ func SelfSignedCert(key crypto.PrivateKey) (*x509.Certificate, error) {
 		NotAfter:              now.Add(duration365d * 10).UTC(),
 		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 		BasicConstraintsValid: true,
+		PublicKey:             key.(crypto.Signer).Public(),
 		IsCA:                  true,
-		ExtraExtensions: []pkix.Extension{
-			{
-				Id:    []int{1, 2, 3, 4},
-				Value: extraExtensionData,
-			},
-			// This extension should override the SubjectKeyId, above.
-			{
-				Id:       oidExtensionSubjectKeyId,
-				Critical: false,
-				Value:    []byte{0x04, 0x04, 4, 3, 2, 1},
-			},
-		},
 	}
+
+	ski, err := ComputeSKI(&template)
+	if err != nil {
+		return nil, errors.Annotate(err, "compute subject key id")
+	}
+
+	template.SubjectKeyId = ski
 
 	certDERBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, key.(crypto.Signer).Public(), key)
 	if err != nil {
@@ -75,6 +68,28 @@ func SelfSignedCert(key crypto.PrivateKey) (*x509.Certificate, error) {
 	}
 
 	return cert, nil
+}
+
+type subjectPublicKeyInfo struct {
+	Algorithm        pkix.AlgorithmIdentifier
+	SubjectPublicKey asn1.BitString
+}
+
+func ComputeSKI(template *x509.Certificate) ([]byte, error) {
+	pub := template.PublicKey
+	encodedPub, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		return nil, err
+	}
+
+	var subPKI subjectPublicKeyInfo
+	_, err = asn1.Unmarshal(encodedPub, &subPKI)
+	if err != nil {
+		return nil, err
+	}
+
+	pubHash := sha1.Sum(subPKI.SubjectPublicKey.Bytes)
+	return pubHash[:], nil
 }
 
 // encode the cert to pem
