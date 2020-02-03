@@ -11,8 +11,10 @@ type Interface interface {
 	Delete(key string) error
 	// get the spec key value
 	Get(key string) ([]byte, error)
-	// watch the spec key value
+	// watch the spec key value,
 	Watch(key string) (<-chan *Message, error)
+	// watch the spec key value,
+	WatchPrefix(prefix string) (<-chan *Message, error)
 	// get the object list
 	// key start with prefix
 	List(prefix string) (map[string][]byte, error)
@@ -40,4 +42,5 @@ const (
 type Message struct {
 	EventType EventType
 	Data      []byte
+	Key       string
 }

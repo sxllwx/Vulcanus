@@ -65,7 +65,7 @@ func (o *option) readCACert() error {
 }
 
 func (o *option) sign() error {
-
+	return nil
 }
 func (o *option) run() error {
 

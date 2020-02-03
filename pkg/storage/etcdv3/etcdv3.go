@@ -127,42 +127,53 @@ func (c *Client) Get(key string) ([]byte, error) {
 	return []byte(v), nil
 }
 
+func (c *Client) handleWatchEvent(out chan *storage.Message, in clientv3.WatchChan) {
+
+	for o := range in {
+
+		// got events
+		for _, e := range o.Events {
+
+			m := &storage.Message{
+				Data: e.Kv.Value,
+				Key:  string(e.Kv.Key),
+			}
+			switch {
+
+			case e.IsCreate():
+				m.EventType = storage.Create
+			case e.Type == mvccpb.DELETE:
+				m.EventType = storage.Delete
+			default:
+				m.EventType = storage.Update
+			}
+			out <- m
+		}
+	}
+	close(out)
+}
+
+func (c *Client) WatchPrefix(prefix string) (<-chan *storage.Message, error) {
+
+	out := make(chan *storage.Message, defaultWatchBuf)
+
+	wc, err := c.watchPrefix(prefix)
+	if err != nil {
+		return nil, errors.Annotatef(err, "watch prefix (key %s)", prefix)
+	}
+	go c.handleWatchEvent(out, wc)
+	return out, nil
+}
+
 func (c *Client) Watch(key string) (<-chan *storage.Message, error) {
 
 	out := make(chan *storage.Message, defaultWatchBuf)
 
 	wc, err := c.watch(key)
 	if err != nil {
-		return nil, errors.Annotatef(err, "watch prefix (key %s)", key)
+		return nil, errors.Annotatef(err, "watch (key %s)", key)
 	}
-
-	go func() {
-
-		for o := range wc {
-
-			// got events
-			for _, e := range o.Events {
-
-				m := &storage.Message{
-					Data: e.Kv.Value,
-				}
-				switch {
-
-				case e.IsCreate():
-					m.EventType = storage.Create
-				case e.Type == mvccpb.DELETE:
-					m.EventType = storage.Delete
-				default:
-					m.EventType = storage.Update
-				}
-				out <- m
-			}
-		}
-
-		// the wc chan closed
-		close(out)
-	}()
-
+	go c.handleWatchEvent(out, wc)
 	return out, nil
 }
 
@@ -341,10 +352,7 @@ func (c *Client) put(k string, v string, opts ...clientv3.OpOption) error {
 		return ErrNilETCDV3Client
 	}
 
-	_, err := c.rawClient.Txn(c.ctx).
-		If(clientv3.Compare(clientv3.Version(k), "<", 1)).
-		Then(clientv3.OpPut(k, v, opts...)).
-		Commit()
+	_, err := c.rawClient.Put(c.ctx, k, v)
 	if err != nil {
 		return err
 
@@ -443,6 +451,18 @@ func (c *Client) watch(k string) (clientv3.WatchChan, error) {
 	}
 
 	return c.rawClient.Watch(c.ctx, k), nil
+}
+
+func (c *Client) watchPrefix(k string) (clientv3.WatchChan, error) {
+
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	if c.rawClient == nil {
+		return nil, ErrNilETCDV3Client
+	}
+
+	return c.rawClient.Watch(c.ctx, k, clientv3.WithPrefix()), nil
 }
 
 func (c *Client) keepAliveKV(k string, v string) error {
