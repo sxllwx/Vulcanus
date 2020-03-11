@@ -1,4 +1,4 @@
-package consumer
+package worker
 
 import (
 	"context"
@@ -10,13 +10,8 @@ import (
 	"github.com/sxllwx/vulcanus/pkg/cache/store"
 )
 
-var (
-	ErrConsumerAlreadyStopped = errors.New("the consumer already stopped")
-)
-
 type RateLimiterBatchConsumer interface {
 	Run()
-	MaxHandlingCapOneBatch() int
 	Done() <-chan struct{}
 	Close() ([]interface{}, error)
 }
@@ -34,10 +29,9 @@ type rateLimiterBatchConsumerImpl struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	mu                     sync.RWMutex
-	maxHandlingCapOneBatch int
-	dirty                  []interface{} // the handling
-	wg                     sync.WaitGroup
+	mu    sync.RWMutex
+	dirty []interface{} // the handling element
+	wg    sync.WaitGroup
 
 	// the store
 	store supportedStore
@@ -45,6 +39,8 @@ type rateLimiterBatchConsumerImpl struct {
 	// the consumer handle logic
 	HandleInterval time.Duration
 	HandleFunc     func([]interface{}) error
+
+	// evaluate the consumer ability
 	BurstCheckFunc func([]interface{}) (bool, error)
 }
 
@@ -118,24 +114,6 @@ func (c *rateLimiterBatchConsumerImpl) getElements() ([]interface{}, error) {
 	}
 
 	return bucket, nil
-}
-
-func (c *rateLimiterBatchConsumerImpl) updateMaxHandlingCapOneBatch(l int) {
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.maxHandlingCapOneBatch = l
-}
-
-func (c *rateLimiterBatchConsumerImpl) getDirty() []interface{} {
-
-	var out []interface{}
-
-	c.mu.RLock()
-	out = c.dirty
-	c.mu.RUnlock()
-
-	return out
 }
 
 func (c *rateLimiterBatchConsumerImpl) findThreshHold() ([]interface{}, error) {
@@ -287,18 +265,11 @@ func (c *rateLimiterBatchConsumerImpl) markAsDirty(bucket []interface{}) {
 	c.mu.Unlock()
 }
 
-func (c *rateLimiterBatchConsumerImpl) MaxHandlingCapOneBatch() int {
-
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	return c.maxHandlingCapOneBatch
-}
-
 func (c *rateLimiterBatchConsumerImpl) Done() <-chan struct{} {
 	return c.ctx.Done()
 }
 
+// when the worker be stopped, the worker should get all elemenet
 func (c *rateLimiterBatchConsumerImpl) Close() ([]interface{}, error) {
 
 	c.cancel()
@@ -308,26 +279,18 @@ func (c *rateLimiterBatchConsumerImpl) Close() ([]interface{}, error) {
 	return c.getDirty(), nil
 }
 
-type options struct {
-	ctx   context.Context
-	store supportedStore
+func (c *rateLimiterBatchConsumerImpl) getDirty() []interface{} {
+
+	var out []interface{}
+
+	c.mu.RLock()
+	out = c.dirty
+	c.mu.RUnlock()
+
+	return out
 }
 
-type Option func(*options)
-
-func WithContext(ctx context.Context) Option {
-	return func(o *options) {
-		o.ctx = ctx
-	}
-}
-
-func WithStore(store supportedStore) Option {
-	return func(o *options) {
-		o.store = store
-	}
-}
-
-func NewLimiterBatchConsumer(ctx context.Context, store supportedStore) *rateLimiterBatchConsumerImpl {
+func NewLimiterBatchWorker(ctx context.Context, store supportedStore) *rateLimiterBatchConsumerImpl {
 
 	childCtx, cancel := context.WithCancel(ctx)
 	out := &rateLimiterBatchConsumerImpl{
