@@ -14,21 +14,15 @@ type stack struct {
 	store.LifeCycle
 
 	lock  sync.RWMutex
-	wg    sync.WaitGroup // add the wg for every write operation
 	store *list.List
 }
 
-func (s *stack) Close() error {
-	return s.LifeCycle.Close()
-}
+func (s *stack) Len() (int, error) {
 
-func (s *stack) Done() <-chan struct{} {
-	return s.LifeCycle.Done()
-}
-
-func (s *stack) Wait() error {
-	s.wg.Wait()
-	return nil
+	s.lock.RLock()
+	out := s.store.Len()
+	s.lock.RUnlock()
+	return out, nil
 }
 
 func (s *stack) Rest() ([]interface{}, error) {
@@ -45,21 +39,10 @@ func (s *stack) Rest() ([]interface{}, error) {
 	return out, nil
 }
 
-func (s *stack) Len() (int, error) {
-
-	s.lock.RLock()
-	out := s.store.Len()
-	s.lock.RUnlock()
-	return out, nil
-}
-
 func (s *stack) Push(e interface{}) error {
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
-
-	s.wg.Add(1)
-	defer s.wg.Done()
 
 	return s.pushElement(e)
 }
@@ -68,7 +51,7 @@ func (s *stack) Push(e interface{}) error {
 func (s *stack) pushElement(e interface{}) error {
 
 	if !s.Alive() {
-		return store.ErrContainerAlreadyStopped
+		return store.ErrContainerAlreadyClosed
 	}
 	s.store.PushBack(e)
 	return nil
@@ -78,13 +61,12 @@ func (s *stack) pushElement(e interface{}) error {
 func (s *stack) popElement() (interface{}, error) {
 
 	if !s.Alive() {
-		return nil, store.ErrContainerAlreadyStopped
+		return nil, store.ErrContainerAlreadyClosed
 	}
 
 	out := s.store.Back()
 	if out != nil {
-		s.store.Remove(out)
-		return out.Value, nil
+		return s.store.Remove(out), nil
 	}
 	return nil, store.ErrContainerEmpty
 }
@@ -93,9 +75,6 @@ func (s *stack) Pop() (interface{}, error) {
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
-
-	s.wg.Add(1)
-	defer s.wg.Done()
 
 	return s.popElement()
 }
@@ -109,9 +88,9 @@ func NewStack(ctx context.Context) store.Stack {
 }
 
 type blockStack struct {
-	cond *sync.Cond
 	stack
 
+	cond         *sync.Cond
 	burstChecker store.BurstChecker
 }
 
@@ -133,11 +112,8 @@ func (s *blockStack) Push(e interface{}) error {
 	s.cond.L.Lock()
 	defer s.cond.L.Unlock()
 
-	s.wg.Add(1)
-	defer s.wg.Done()
-
 	// burst check
-	for s.burstChecker(s.store.Len()) {
+	for s.burstChecker(s.store.Len()) && s.Alive() {
 		// full, wait empty
 		s.cond.Wait()
 	}
@@ -156,10 +132,7 @@ func (s *blockStack) Pop() (interface{}, error) {
 	s.cond.L.Lock()
 	defer s.cond.L.Unlock()
 
-	s.wg.Add(1)
-	defer s.wg.Done()
-
-	for s.store.Len() == 0 {
+	for s.store.Len() == 0 && s.Alive() {
 		// empty
 		s.cond.Wait()
 	}
@@ -171,4 +144,14 @@ func (s *blockStack) Pop() (interface{}, error) {
 
 	s.cond.Broadcast()
 	return e, nil
+}
+
+func (s *blockStack) Close() error {
+
+	s.cond.L.Lock()
+	defer s.cond.L.Unlock()
+
+	s.stack.Close()
+	s.cond.Broadcast()
+	return nil
 }

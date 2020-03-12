@@ -8,11 +8,10 @@ import (
 )
 
 var (
-	ErrContainerFull           = errors.New("container is full")
-	ErrContainerEmpty          = errors.New("container is empty")
-	ErrContainerAlreadyStopped = errors.New("container already be stopped")
-	ErrRestShouldNotBeCall     = errors.New("the Rest method should be call after Close")
-	ErrNotFound                = errors.New("the element not be found in container")
+	ErrContainerEmpty         = errors.New("container is empty")
+	ErrContainerAlreadyClosed = errors.New("container already be closed")
+	ErrRestShouldNotBeCall    = errors.New("the Rest method should be call after Close")
+	ErrNotFound               = errors.New("the element not be found in container")
 )
 
 // NiceContainer
@@ -21,9 +20,6 @@ var (
 type NiceContainer interface {
 	io.Closer
 	Done() <-chan struct{}
-
-	// wait the operations in this container stopped
-	Wait() error
 
 	// every goroutine can got the rest element from the stopped store
 	Rest() ([]interface{}, error)
@@ -46,6 +42,7 @@ type LifeCycle struct {
 	cancel context.CancelFunc
 }
 
+// if the parent be closed, the LifeCycle ctx.Done() also be closed
 func NewLifeCycle(parent context.Context) LifeCycle {
 
 	ctx, cancel := context.WithCancel(parent)

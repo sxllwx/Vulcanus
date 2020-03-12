@@ -1,33 +1,10 @@
 package cache
 
 import (
-	"context"
-	"testing"
-	"time"
-
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
-	"github.com/sxllwx/vulcanus/pkg/store"
 )
 
-type StackTestSuit struct {
-	suite.Suite
-
-	stack      store.Stack
-	blockStack store.Stack
-}
-
-func (s *StackTestSuit) SetupSuite() {
-
-	parent := context.Background()
-	s.stack = NewStack(parent)
-	s.blockStack = NewBlockStack(parent, func(i int) bool {
-		return i > 5
-	})
-
-}
-
-func (s *StackTestSuit) TestStack() {
+func (s *cacheTestSuit) TestStack() {
 
 	e, err := s.stack.Pop()
 	assert.NotNil(s.T(), err)
@@ -57,34 +34,26 @@ func (s *StackTestSuit) TestStack() {
 	s.T().Logf("got element: %v", e)
 }
 
-func (s *StackTestSuit) TestBlockStack() {
+func (s *cacheTestSuit) TestBlockStack() {
 
 	go func() {
-		s.T().Logf("try to get element")
-		e, err := s.blockStack.Pop()
-		assert.Nil(s.T(), err)
-		s.T().Logf("block got element: %v", e)
-	}()
 
-	time.Sleep(time.Second)
+		for {
+			s.T().Logf("try to get element")
+			e, err := s.blockStack.Pop()
+			s.T().Logf("block got element: %v, err -> %v", e, err)
+		}
+	}()
 
 	assert.Nil(s.T(), s.blockStack.Push(0))
 	assert.Nil(s.T(), s.blockStack.Push(1))
 	assert.Nil(s.T(), s.blockStack.Push(2))
-
-}
-
-func (s *StackTestSuit) TearDownSuite() {
-
-	s.stack.Close()
-
-	rest, err := s.stack.Rest()
-	assert.Nil(s.T(), err)
-	s.T().Logf("got rest: %v", rest)
-
-	s.blockStack.Close()
-}
-
-func TestStack(t *testing.T) {
-	suite.Run(t, new(StackTestSuit))
+	assert.Nil(s.T(), s.blockStack.Push(3))
+	assert.Nil(s.T(), s.blockStack.Push(4))
+	assert.Nil(s.T(), s.blockStack.Push(5))
+	assert.Nil(s.T(), s.blockStack.Push(6))
+	assert.Nil(s.T(), s.blockStack.Push(7))
+	assert.Nil(s.T(), s.blockStack.Push(8))
+	assert.Nil(s.T(), s.blockStack.Push(9))
+	assert.Nil(s.T(), s.blockStack.Push(10))
 }
