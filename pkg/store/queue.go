@@ -14,8 +14,6 @@ type Queue interface {
 	// if the queue is empty,
 	// the actually behavior will be decided by impl
 	DeQueue() (interface{}, error)
-
-	Len() (int, error)
 }
 
 // DoubleEndQueue

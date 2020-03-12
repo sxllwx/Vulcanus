@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	ErrContainerFull           = errors.New("container is full")
 	ErrContainerEmpty          = errors.New("container is empty")
 	ErrContainerAlreadyStopped = errors.New("container already be stopped")
 	ErrRestShouldNotBeCall     = errors.New("the Rest method should be call after Close")
@@ -18,8 +19,6 @@ var (
 // when the container be closed, then notify the done
 // when the container be closed, the goroutines can wait the container stop
 type NiceContainer interface {
-	Safe() // just a flag method
-
 	io.Closer
 	Done() <-chan struct{}
 
@@ -40,9 +39,21 @@ type BlockContainer interface {
 	BlockRequest() // just a flag method
 }
 
+type BurstChecker func(int) bool
+
 type LifeCycle struct {
 	ctx    context.Context
 	cancel context.CancelFunc
+}
+
+func NewLifeCycle(parent context.Context) LifeCycle {
+
+	ctx, cancel := context.WithCancel(parent)
+	return LifeCycle{
+		ctx:    ctx,
+		cancel: cancel,
+	}
+
 }
 
 func (lc *LifeCycle) Done() <-chan struct{} {
