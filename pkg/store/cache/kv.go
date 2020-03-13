@@ -101,6 +101,11 @@ func (s *kvStore) TTL(k string, ttl time.Duration) error {
 		if !ok {
 			return
 		}
+
+		if entity.timer == nil {
+			return
+		}
+
 		entity.timer.Stop()
 		delete(s.store, k)
 	})
