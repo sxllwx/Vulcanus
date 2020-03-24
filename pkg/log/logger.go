@@ -31,7 +31,7 @@ var (
 	Warnf  func(template string, args ...interface{})
 	Debugf func(template string, args ...interface{})
 	Errorf func(template string, args ...interface{})
-	Fataf  func(template string, args ...interface{})
+	Fatalf func(template string, args ...interface{})
 )
 
 func newStdOutLogCore() zapcore.Core {
