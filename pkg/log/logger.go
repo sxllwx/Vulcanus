@@ -90,7 +90,7 @@ func init() {
 	Warnf = GlobalLogger.Sugar().Warnf
 	Debugf = GlobalLogger.Sugar().Debugf
 	Errorf = GlobalLogger.Sugar().Errorf
-	Fataf = GlobalLogger.Sugar().Fatalf
+	Fatalf = GlobalLogger.Sugar().Fatalf
 
 	// the sync method
 	Sync = GlobalLogger.Sync
