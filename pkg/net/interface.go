@@ -69,7 +69,7 @@ func newMeasurableSuite() *defaultMeasurableSuite {
 		start:  time.Now(),
 	}
 
-	out.loop()
+	go out.loop()
 	return out
 }
 
