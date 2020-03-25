@@ -15,4 +15,5 @@ func TestLogger(t *testing.T) {
 	Debugf("hello %s", "scott")
 
 	Error("hello i am a err, should trace me")
+	Pa("hello i am a err, should not  trace me")
 }
