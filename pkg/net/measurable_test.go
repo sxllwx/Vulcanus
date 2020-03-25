@@ -1,10 +1,7 @@
 package net
 
 import (
-	"crypto/rand"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -12,7 +9,7 @@ import (
 
 func TestReader(t *testing.T) {
 
-	f, err := os.Open("/tmp/rand")
+	f, err := os.Open("/tmp/test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,9 +17,16 @@ func TestReader(t *testing.T) {
 	rc := DecorateReadCloser(f)
 	defer rc.Close()
 
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(time.Second)
 
-	go io.Copy(ioutil.Discard, rc)
+	go func() {
+
+		b := make([]byte, 1024*8)
+		for i := 0; i < 2000000; i++ {
+			rc.Read(b)
+		}
+
+	}()
 
 	for _ = range ticker.C {
 		fmt.Println(rc.BPS())
@@ -31,10 +35,7 @@ func TestReader(t *testing.T) {
 
 func TestWriter(t *testing.T) {
 
-	test := make([]byte, 1024*1024*1024*4)
-	rand.Read(test)
-
-	f, err := os.OpenFile("/tmp/rand", os.O_CREATE|os.O_RDWR, 0666)
+	f, err := os.OpenFile("/tmp/test", os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,10 +43,16 @@ func TestWriter(t *testing.T) {
 	wc := DecorateWriteCloser(f)
 	defer wc.Close()
 
-	ticker := time.NewTicker(time.Millisecond * 100)
-	go wc.Write(test)
+	ticker := time.NewTicker(time.Millisecond)
+	go func() {
 
-	fmt.Println("already start ")
+		test := make([]byte, 1024*8)
+		for i := 0; i < 2000000; i++ {
+			wc.Write(test)
+		}
+
+		os.Exit(0)
+	}()
 	for _ = range ticker.C {
 		fmt.Println(wc.BPS())
 	}
