@@ -3,6 +3,7 @@ package net
 import (
 	"fmt"
 	"os"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -35,7 +36,7 @@ func TestReader(t *testing.T) {
 
 func TestWriter(t *testing.T) {
 
-	f, err := os.OpenFile("/tmp/test", os.O_CREATE|os.O_RDWR, 0666)
+	f, err := os.OpenFile("/tmp/test", syscall.O_DIRECT|os.O_CREATE|os.O_RDWR|os.O_SYNC, 0666)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,15 +44,13 @@ func TestWriter(t *testing.T) {
 	wc := DecorateWriteCloser(f)
 	defer wc.Close()
 
-	ticker := time.NewTicker(time.Millisecond)
+	ticker := time.NewTicker(time.Second)
 	go func() {
 
 		test := make([]byte, 1024*8)
-		for i := 0; i < 2000000; i++ {
+		for i := 0; i < 2000; i++ {
 			wc.Write(test)
 		}
-
-		os.Exit(0)
 	}()
 	for _ = range ticker.C {
 		fmt.Println(wc.BPS())
