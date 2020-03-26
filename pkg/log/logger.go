@@ -73,7 +73,7 @@ func newLogger() *defaultLogger {
 		zapcore.NewTee(out.productEnvConfig.Core, out.developEnvConfig.Core),
 		zap.AddCaller(),
 		//zap.AddStacktrace(zap.LevelEnablerFunc(func(l zapcore.Level) bool {
-		//	return l >= zap.WarnLevel
+		//	return l >= zap.DebugLevel
 		//})),
 	)
 
