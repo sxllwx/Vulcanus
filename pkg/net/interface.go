@@ -3,6 +3,7 @@ package net
 import (
 	"context"
 	"io"
+	"net"
 	"sync/atomic"
 	"time"
 )
@@ -83,6 +84,11 @@ type MeasurableReadCloser interface {
 	io.ReadCloser
 }
 
+type MeasurableConn interface {
+	measurable
+	net.Conn
+}
+
 type readCloser struct {
 	*defaultMeasurableSuite
 	io.ReadCloser
@@ -136,4 +142,38 @@ func (wc *writeCloser) Write(b []byte) (int, error) {
 func (wc *writeCloser) Close() error {
 	wc.cancel()
 	return wc.WriteCloser.Close()
+}
+
+type conn struct {
+	*defaultMeasurableSuite
+	net.Conn
+}
+
+func DecorateConn(c net.Conn) MeasurableConn {
+	return &conn{
+		defaultMeasurableSuite: newMeasurableSuite(),
+		Conn:                   c,
+	}
+}
+
+func (c *conn) Write(b []byte) (int, error) {
+
+	n, err := c.Conn.Write(b)
+	if err != nil {
+		return 0, err
+	}
+
+	atomic.AddUint64(&c.totalBytes, uint64(n))
+	return n, nil
+}
+
+func (c *conn) Read(b []byte) (int, error) {
+
+	n, err := c.Conn.Read(b)
+	if err != nil {
+		return 0, err
+	}
+
+	atomic.AddUint64(&c.totalBytes, uint64(n))
+	return n, nil
 }
