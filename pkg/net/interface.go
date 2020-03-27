@@ -177,3 +177,8 @@ func (c *conn) Read(b []byte) (int, error) {
 	atomic.AddUint64(&c.totalBytes, uint64(n))
 	return n, nil
 }
+
+func (c *conn) Close() error {
+	c.cancel()
+	return c.Conn.Close()
+}
