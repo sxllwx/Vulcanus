@@ -9,9 +9,15 @@ import (
 )
 
 type measurable interface {
-	Total() uint64
-	BPS() uint64
+
+	// real time metric
+	BytesPerSecond() uint64
+
+	// average metric
+	TotalBytes() uint64
 	Cost() time.Duration
+	AverageBytesPerSecond() float64
+
 	addTotal(uint64)
 	stop()
 }
@@ -47,35 +53,20 @@ type defaultMeasurableSuite struct {
 	ticker *time.Ticker
 }
 
-func (r *defaultMeasurableSuite) loop() {
-
-	for {
-
-		oldTotalBytes := atomic.LoadUint64(&r.totalBytes)
-
-		select {
-		case <-r.ctx.Done():
-			r.ticker.Stop()
-			return
-		case <-r.ticker.C:
-		}
-
-		// store the new rate
-		atomic.StoreUint64(&r.bps, atomic.LoadUint64(&r.totalBytes)-oldTotalBytes)
-	}
-
-}
-
 func (r *defaultMeasurableSuite) Cost() time.Duration {
 	return time.Since(r.start)
 }
 
-func (r *defaultMeasurableSuite) Total() uint64 {
+func (r *defaultMeasurableSuite) TotalBytes() uint64 {
 	return atomic.LoadUint64(&r.totalBytes)
 }
 
-func (r *defaultMeasurableSuite) BPS() uint64 {
+func (r *defaultMeasurableSuite) BytesPerSecond() uint64 {
 	return atomic.LoadUint64(&r.bps)
+}
+
+func (r *defaultMeasurableSuite) AverageBytesPerSecond() float64 {
+	return float64(atomic.LoadUint64(&r.totalBytes)) / time.Since(r.start).Seconds()
 }
 
 func (r *defaultMeasurableSuite) addTotal(t uint64) {
@@ -98,6 +89,25 @@ func newMeasurableSuite() *defaultMeasurableSuite {
 
 	go out.loop()
 	return out
+}
+
+func (r *defaultMeasurableSuite) loop() {
+
+	for {
+
+		oldTotalBytes := atomic.LoadUint64(&r.totalBytes)
+
+		select {
+		case <-r.ctx.Done():
+			r.ticker.Stop()
+			return
+		case <-r.ticker.C:
+		}
+
+		// store the new rate
+		atomic.StoreUint64(&r.bps, atomic.LoadUint64(&r.totalBytes)-oldTotalBytes)
+	}
+
 }
 
 type readCloser struct {
