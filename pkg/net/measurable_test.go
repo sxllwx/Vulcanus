@@ -29,13 +29,13 @@ func TestReader(t *testing.T) {
 	}()
 
 	for _ = range ticker.C {
-		fmt.Println(rc.BPS())
+		fmt.Println(rc.BytesPerSecond())
 	}
 }
 
 func TestWriter(t *testing.T) {
 
-	f, err := os.OpenFile("/tmp/test", os.O_CREATE|os.O_RDWR|os.O_SYNC, 0666)
+	f, err := os.OpenFile("/tmp/test_code", os.O_CREATE|os.O_RDWR|os.O_SYNC, 0666)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,12 +46,15 @@ func TestWriter(t *testing.T) {
 	ticker := time.NewTicker(time.Second)
 	go func() {
 
-		test := make([]byte, 1024*8)
-		for i := 0; i < 2000000; i++ {
+		test := make([]byte, 1024*1024)
+		for i := 0; i < 2000; i++ {
 			wc.Write(test)
 		}
+
+		fmt.Printf("the write average speed: %v", wc.AverageBytesPerSecond())
+		os.Exit(0)
 	}()
 	for _ = range ticker.C {
-		fmt.Println(wc.BPS())
+		fmt.Println(wc.BytesPerSecond())
 	}
 }
