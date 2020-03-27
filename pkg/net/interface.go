@@ -77,11 +77,13 @@ func newMeasurableSuite() *defaultMeasurableSuite {
 type MeasurableWriteCloser interface {
 	measurable
 	io.WriteCloser
+	FD() io.WriteCloser
 }
 
 type MeasurableReadCloser interface {
 	measurable
 	io.ReadCloser
+	FD() io.ReadCloser
 }
 
 type MeasurableConn interface {
@@ -116,6 +118,10 @@ func (rc *readCloser) Read(b []byte) (int, error) {
 	return n, nil
 }
 
+func (rc *readCloser) FD() io.ReadCloser {
+	return rc.ReadCloser
+}
+
 type writeCloser struct {
 	*defaultMeasurableSuite
 	io.WriteCloser
@@ -126,6 +132,10 @@ func DecorateWriteCloser(wc io.WriteCloser) MeasurableWriteCloser {
 		defaultMeasurableSuite: newMeasurableSuite(),
 		WriteCloser:            wc,
 	}
+}
+
+func (wc *writeCloser) FD() io.WriteCloser {
+	return wc.WriteCloser
 }
 
 func (wc *writeCloser) Write(b []byte) (int, error) {
@@ -142,43 +152,4 @@ func (wc *writeCloser) Write(b []byte) (int, error) {
 func (wc *writeCloser) Close() error {
 	wc.cancel()
 	return wc.WriteCloser.Close()
-}
-
-type conn struct {
-	*defaultMeasurableSuite
-	net.Conn
-}
-
-func DecorateConn(c net.Conn) MeasurableConn {
-	return &conn{
-		defaultMeasurableSuite: newMeasurableSuite(),
-		Conn:                   c,
-	}
-}
-
-func (c *conn) Write(b []byte) (int, error) {
-
-	n, err := c.Conn.Write(b)
-	if err != nil {
-		return 0, err
-	}
-
-	atomic.AddUint64(&c.totalBytes, uint64(n))
-	return n, nil
-}
-
-func (c *conn) Read(b []byte) (int, error) {
-
-	n, err := c.Conn.Read(b)
-	if err != nil {
-		return 0, err
-	}
-
-	atomic.AddUint64(&c.totalBytes, uint64(n))
-	return n, nil
-}
-
-func (c *conn) Close() error {
-	c.cancel()
-	return c.Conn.Close()
 }
