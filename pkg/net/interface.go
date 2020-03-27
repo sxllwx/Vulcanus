@@ -12,6 +12,8 @@ type measurable interface {
 	Total() uint64
 	BPS() uint64
 	Cost() time.Duration
+	addTotal(uint64)
+	stop()
 }
 
 type defaultMeasurableSuite struct {
@@ -60,6 +62,14 @@ func (r *defaultMeasurableSuite) BPS() uint64 {
 	return atomic.LoadUint64(&r.bps)
 }
 
+func (r *defaultMeasurableSuite) addTotal(t uint64) {
+	atomic.AddUint64(&r.totalBytes, t)
+}
+
+func (r *defaultMeasurableSuite) stop() {
+	r.cancel()
+}
+
 func newMeasurableSuite() *defaultMeasurableSuite {
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -77,13 +87,11 @@ func newMeasurableSuite() *defaultMeasurableSuite {
 type MeasurableWriteCloser interface {
 	measurable
 	io.WriteCloser
-	FD() io.WriteCloser
 }
 
 type MeasurableReadCloser interface {
 	measurable
 	io.ReadCloser
-	FD() io.ReadCloser
 }
 
 type MeasurableConn interface {
@@ -92,19 +100,19 @@ type MeasurableConn interface {
 }
 
 type readCloser struct {
-	*defaultMeasurableSuite
+	measurable
 	io.ReadCloser
 }
 
 func DecorateReadCloser(rc io.ReadCloser) MeasurableReadCloser {
 	return &readCloser{
-		defaultMeasurableSuite: newMeasurableSuite(),
-		ReadCloser:             rc,
+		measurable: newMeasurableSuite(),
+		ReadCloser: rc,
 	}
 }
 
 func (rc *readCloser) Close() error {
-	rc.cancel()
+	rc.stop()
 	return rc.ReadCloser.Close()
 }
 func (rc *readCloser) Read(b []byte) (int, error) {
@@ -114,7 +122,7 @@ func (rc *readCloser) Read(b []byte) (int, error) {
 		return 0, err
 	}
 
-	atomic.AddUint64(&rc.totalBytes, uint64(n))
+	rc.measurable.addTotal(uint64(n))
 	return n, nil
 }
 
@@ -123,14 +131,14 @@ func (rc *readCloser) FD() io.ReadCloser {
 }
 
 type writeCloser struct {
-	*defaultMeasurableSuite
+	measurable
 	io.WriteCloser
 }
 
 func DecorateWriteCloser(wc io.WriteCloser) MeasurableWriteCloser {
 	return &writeCloser{
-		defaultMeasurableSuite: newMeasurableSuite(),
-		WriteCloser:            wc,
+		measurable:  newMeasurableSuite(),
+		WriteCloser: wc,
 	}
 }
 
@@ -145,11 +153,11 @@ func (wc *writeCloser) Write(b []byte) (int, error) {
 		return 0, err
 	}
 
-	atomic.AddUint64(&wc.totalBytes, uint64(n))
+	wc.measurable.addTotal(uint64(n))
 	return n, nil
 }
 
 func (wc *writeCloser) Close() error {
-	wc.cancel()
+	wc.stop()
 	return wc.WriteCloser.Close()
 }
