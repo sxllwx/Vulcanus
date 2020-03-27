@@ -16,6 +16,22 @@ type measurable interface {
 	stop()
 }
 
+type MeasurableWriteCloser interface {
+	measurable
+	io.WriteCloser
+}
+
+type MeasurableReadCloser interface {
+	measurable
+	io.ReadCloser
+}
+
+type MeasurableConn interface {
+	ReadMetric() measurable
+	WriteMetric() measurable
+	net.Conn
+}
+
 type defaultMeasurableSuite struct {
 
 	// lifecycle manager
@@ -84,21 +100,6 @@ func newMeasurableSuite() *defaultMeasurableSuite {
 	return out
 }
 
-type MeasurableWriteCloser interface {
-	measurable
-	io.WriteCloser
-}
-
-type MeasurableReadCloser interface {
-	measurable
-	io.ReadCloser
-}
-
-type MeasurableConn interface {
-	measurable
-	net.Conn
-}
-
 type readCloser struct {
 	measurable
 	io.ReadCloser
@@ -160,4 +161,56 @@ func (wc *writeCloser) Write(b []byte) (int, error) {
 func (wc *writeCloser) Close() error {
 	wc.stop()
 	return wc.WriteCloser.Close()
+}
+
+type conn struct {
+	rm measurable
+	wm measurable
+	net.Conn
+}
+
+func DecorateConn(c net.Conn) MeasurableConn {
+	return &conn{
+		rm:   newMeasurableSuite(),
+		wm:   newMeasurableSuite(),
+		Conn: c,
+	}
+}
+
+func (c *conn) ReadMetric() measurable {
+	return c.rm
+}
+
+func (c *conn) WriteMetric() measurable {
+	return c.wm
+}
+
+func (c *conn) Read(b []byte) (int, error) {
+
+	n, err := c.Conn.Read(b)
+	if err != nil {
+		return 0, err
+	}
+
+	c.rm.addTotal(uint64(n))
+	return n, nil
+}
+
+func (c *conn) Write(b []byte) (int, error) {
+
+	n, err := c.Conn.Write(b)
+	if err != nil {
+		return 0, err
+	}
+
+	c.wm.addTotal(uint64(n))
+	return n, nil
+}
+
+func (c *conn) Close() error {
+
+	c.wm.stop()
+	c.rm.stop()
+
+	return c.Conn.Close()
 }
