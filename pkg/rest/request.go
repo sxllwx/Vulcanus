@@ -163,7 +163,7 @@ type Result struct {
 	resp *http.Response
 }
 
-func (r *Result) Process(handleFunc func(*http.Response) error) error {
+func (r *Result) Process(success func(*http.Response) error, fail func(response *http.Response) error) error {
 
 	if r.err != nil {
 		return r.err
@@ -171,8 +171,14 @@ func (r *Result) Process(handleFunc func(*http.Response) error) error {
 
 	defer r.resp.Body.Close()
 
-	if err := handleFunc(r.resp); err != nil {
-		return err
+	switch r.resp.StatusCode {
+
+	case http.StatusOK:
+		if err := success(r.resp); err != nil {
+			return err
+		}
+	default:
 	}
-	return nil
+
+	return fail(r.resp)
 }

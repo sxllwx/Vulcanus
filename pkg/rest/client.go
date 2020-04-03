@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"github.com/juju/errors"
+	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
 )
@@ -36,7 +36,7 @@ func NewClient(endpoint string, versionedPath string, transport http.RoundTrippe
 
 	base, err := url.Parse(endpoint)
 	if err != nil {
-		return nil, errors.Annotate(err, "parse endpoint")
+		return nil, errors.WithMessage(err, "parse endpoint")
 	}
 
 	if transport == nil {

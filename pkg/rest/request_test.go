@@ -12,7 +12,7 @@ import (
 
 func TestNewRequest(t *testing.T) {
 
-	baseURL, err := url.Parse("http://localhost:8080")
+	baseURL, err := url.Parse("http://local:8080")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,10 +26,11 @@ func TestNewRequest(t *testing.T) {
 		ResourceSet("books").
 		Resource("scott1").
 		Context(ctx).
-		Do().Process(func(response *http.Response) error {
-		io.Copy(os.Stdout, response.Body)
-		return nil
-	}); err != nil {
+		Do().
+		Process(func(response *http.Response) error {
+			io.Copy(os.Stdout, response.Body)
+			return nil
+		}, func(resp *http.Response) error { return nil }); err != nil {
 		t.Fatal(err)
 	}
 
@@ -37,7 +38,7 @@ func TestNewRequest(t *testing.T) {
 
 func TestURL(t *testing.T) {
 
-	u, err := url.Parse("tcp://localhost:8080")
+	u, err := url.Parse("tcp://local:8080")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +47,7 @@ func TestURL(t *testing.T) {
 
 func TestURLQuery(t *testing.T) {
 
-	u, err := url.Parse("http://localhost:8080/?hello=world")
+	u, err := url.Parse("http://local:8080/?hello=world")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +62,7 @@ func TestURLUserInfo(t *testing.T) {
 
 	u := &url.URL{
 		Scheme: "http",
-		Host:   "localhost:8080",
+		Host:   "local:8080",
 	}
 
 	// like git clone http://scott:password@github.com/sxllwx/xxxx
@@ -76,7 +77,7 @@ var (
 			Opaque: "", // encoded opaque data
 			//User:       url.UserPassword("scott", "psw"), // username and password information
 			User:       nil,
-			Host:       "localhost:8888",           // host or host:port
+			Host:       "local:8888",               // command or command:port
 			Path:       "/apis/v1.0.0/books",       // path (relative paths may omit leading slash)
 			RawPath:    "/apis/v1.0.0/books/scott", // encoded path hint (see EscapedPath method)
 			ForceQuery: false,                      // append a query ('?') even if RawQuery is empty

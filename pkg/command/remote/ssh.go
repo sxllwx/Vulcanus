@@ -1,12 +1,13 @@
-package ssh
+package remote
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"log"
 
-	"github.com/juju/errors"
-	"github.com/sxllwx/vulcanus/pkg/host"
+	"github.com/pkg/errors"
+	"github.com/sxllwx/vulcanus/pkg/command"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -23,17 +24,17 @@ type Config struct {
 	PrivateKeyFile string
 }
 
-func NewClient(cfg *Config, l *log.Logger) (host.Interface, error) {
+func NewClient(cfg *Config) (command.Interface, error) {
 
 	key, err := ioutil.ReadFile(cfg.PrivateKeyFile)
 	if err != nil {
-		return nil, errors.Annotatef(err, "read private key file %s", cfg.PrivateKeyFile)
+		return nil, errors.WithMessagef(err, "read private key file %s", cfg.PrivateKeyFile)
 	}
 
 	// Create the Signer for this private key.
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
-		return nil, errors.Annotate(err, "parse the private key")
+		return nil, errors.WithMessagef(err, "parse the private key")
 	}
 
 	clt, err := ssh.Dial("tcp", cfg.Remote, &ssh.ClientConfig{
@@ -45,13 +46,12 @@ func NewClient(cfg *Config, l *log.Logger) (host.Interface, error) {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	})
 	if err != nil {
-		return nil, errors.Annotate(err, "dial")
+		return nil, errors.WithMessage(err, "dial")
 	}
 
 	return &Client{
 		cfg:    cfg,
 		client: clt,
-		logger: l,
 	}, nil
 
 }
@@ -62,27 +62,29 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) Execute(rootCommand string, args ...string) ([]byte, error) {
+func (c *Client) Exec(cmd string, args []string, in io.Reader, out, err io.WriteCloser) error {
 
 	buff := &bytes.Buffer{}
-	buff.WriteString(rootCommand)
+	buff.WriteString(cmd)
 	for _, a := range args {
 		buff.WriteString(" ")
 		buff.WriteString(a)
 	}
 
-	s, err := c.client.NewSession()
-	if err != nil {
-		return nil, errors.Annotate(err, "new session")
+	s, e := c.client.NewSession()
+	if e != nil {
+		return errors.WithMessage(e, "new session")
 	}
 	defer s.Close()
 
-	out, err := s.CombinedOutput(buff.String())
-	if err != nil {
-		c.logger.Printf("%s execute (%s, %+v) faild, the err {%s} os output %s", c.cfg.Remote, rootCommand, args, err, out)
-		return out, errors.Annotatef(err, "run cmd, os output %s", out)
+	s.Stderr = err
+	s.Stdin = in
+	s.Stdout = out
+
+	e = s.Run(buff.String())
+	if e != nil {
+		return errors.WithMessage(e, "run cmd")
 	}
 
-	c.logger.Printf("%s execute (%s, %+v) success, the os output %s", c.cfg.Remote, rootCommand, args, out)
-	return out, nil
+	return nil
 }

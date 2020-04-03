@@ -4,14 +4,14 @@ import (
 	"sync"
 
 	"github.com/juju/errors"
-	"github.com/sxllwx/vulcanus/pkg/host"
+	"github.com/sxllwx/vulcanus/pkg/command"
 )
 
 // the remote or local iptables-mananger
 type Manager struct {
 	lock sync.Mutex
-	// the shell env for spec host
-	host host.Interface
+	// the shell env for spec command
+	host command.Interface
 	am   *ArgsManager
 }
 
@@ -19,7 +19,7 @@ func (m *Manager) Close() error {
 	return m.host.Close()
 }
 
-func NewManager(h host.Interface) *Manager {
+func NewManager(h command.Interface) *Manager {
 	return &Manager{
 		host: h,
 		am:   &ArgsManager{},

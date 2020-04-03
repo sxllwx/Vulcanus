@@ -82,6 +82,20 @@ func RegisterOpenAPI(c *restful.Container){
 	c.Add(restfulspec.NewOpenAPIService(config))
 }
 
+
+//  New http server, and apply the c to handler
+func NewServer(addr string, c *restful.Container)http.Server{
+
+	return http.Server{
+		Addr: addr,
+		Handler: c,
+		ReadTimeout:    4 * 60 * time.Minute,
+		WriteTimeout:   4 * 60 * time.Minute,
+		MaxHeaderBytes: 1 << 20,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+}
+
 // add rich swagger doc, if user need help, he|she can connect with you
 func richSwaggerDoc(swaggerRootDoc *spec.Swagger){
 

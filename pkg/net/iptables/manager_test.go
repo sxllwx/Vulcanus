@@ -5,26 +5,26 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sxllwx/vulcanus/pkg/host"
-	"github.com/sxllwx/vulcanus/pkg/host/localhost"
-	"github.com/sxllwx/vulcanus/pkg/host/ssh"
+	"github.com/sxllwx/vulcanus/pkg/command"
+	"github.com/sxllwx/vulcanus/pkg/command/local"
+	"github.com/sxllwx/vulcanus/pkg/command/remote"
 )
 
 var l = log.New(os.Stdout, "test ", log.Lshortfile|log.Ltime)
 
-func newSSHHost() (host.Interface, error) {
+func newSSHHost() (command.Interface, error) {
 
-	return ssh.NewClient(&ssh.Config{
+	return remote.NewClient(&remote.Config{
 		Remote:         "192.168.240.101:22",
 		User:           "root",
-		PrivateKeyFile: "/home/scott/.ssh/id_rsa",
+		PrivateKeyFile: "/home/scott/.remote/id_rsa",
 	}, l)
 
 }
 
-func newLocalHost() (host.Interface, error) {
+func newLocalHost() (command.Interface, error) {
 
-	return localhost.NewClient(&localhost.Config{}, l), nil
+	return local.NewClient(&local.Config{}, l), nil
 
 }
 

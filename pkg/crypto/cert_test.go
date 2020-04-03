@@ -49,7 +49,7 @@ func TestSelfSignedCert(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	csr, err := CreateCSR("etcd1", []string{"localhost"}, []net.IP{l}, subjectKey)
+	csr, err := CreateCSR("etcd1", []string{"local"}, []net.IP{l}, subjectKey)
 	if err != nil {
 		t.Fatal(err)
 	}

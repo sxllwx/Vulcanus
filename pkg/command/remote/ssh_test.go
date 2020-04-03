@@ -1,7 +1,6 @@
-package ssh
+package remote
 
 import (
-	"log"
 	"os"
 	"testing"
 )
@@ -12,18 +11,15 @@ var cfg = &Config{
 	PrivateKeyFile: "/home/scott/.ssh/id_rsa",
 }
 
-var l = log.New(os.Stdout, "test", log.Lshortfile|log.Ltime)
-
 func TestClient_Execute(t *testing.T) {
 
-	c, err := NewClient(cfg, l)
+	c, err := NewClient(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	out, err := c.Execute("sdasd")
+	err = c.Exec("ls", []string{}, os.Stdin, os.Stdout, os.Stderr)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("%s", out)
 }

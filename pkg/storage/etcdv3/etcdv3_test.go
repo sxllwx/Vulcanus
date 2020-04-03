@@ -14,7 +14,7 @@ func newDefaultStorage() (storage.Interface, error) {
 
 	s, err := NewEtcdV3Storage(
 		WithHeartbeat(1),
-		WithEndpoints("localhost:2379"),
+		WithEndpoints("local:2379"),
 		WithLogger(l),
 		WithTimeout(1))
 

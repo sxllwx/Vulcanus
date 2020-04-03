@@ -26,7 +26,7 @@ func TestCACreateCSR(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	csr, err := ca.CreateCSR(k, "localhost", []string{"localhost"}, []net.IP{net.ParseIP("127.0.0.1")})
+	csr, err := ca.CreateCSR(k, "local", []string{"local"}, []net.IP{net.ParseIP("127.0.0.1")})
 	if err != nil {
 		t.Fatal(err)
 	}
