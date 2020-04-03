@@ -73,9 +73,16 @@ type Author struct {
 	URL   string
 }
 
-func NewAuthor(name string, email string, url string) *Author {
-	a := &Author{}
-	a.Complete()
+func NewAuthor(name string, email string, url string) Author {
+	a := Author{
+		Name:  name,
+		Email: email,
+		URL:   url,
+	}
+	if len(name) == 0 && len(email) == 0 && len(url) == 0 {
+		a.Complete()
+	}
+
 	return a
 }
 

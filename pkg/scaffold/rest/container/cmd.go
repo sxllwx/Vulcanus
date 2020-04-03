@@ -17,18 +17,21 @@ type option struct {
 
 	// webservice manage which kind of resource
 	kind string
+
+	author string
+	email  string
+	url    string
 }
 
 func (o *option) run(cmd *cobra.Command, args []string) error {
 
 	s := rest.NewService(o.kind)
-	a := rest.NewAuthor("", "", "")
+	a := rest.NewAuthor(o.author, o.email, o.url)
 	p := rest.NewPackage(o.pkg)
 	return scaffold.Generate(NewContainer(p, s, a))
 }
 
-// register container -> rest cmd
-func init() {
+func Command() *cobra.Command {
 
 	o := &option{}
 	cmd := &cobra.Command{
@@ -41,8 +44,10 @@ func init() {
 	cmd.MarkFlagRequired("kind")
 	cmd.Flags().StringVarP(&o.pkg, "package", "p", "", "your awesome package")
 	cmd.MarkFlagRequired("package")
-	rest.RootCommand.AddCommand(cmd)
-	return
+	cmd.Flags().StringVarP(&o.author, "author", "a", "", "author's name")
+	cmd.Flags().StringVarP(&o.email, "email", "e", "", "author's email")
+	cmd.Flags().StringVarP(&o.url, "url", "u", "", "author's github url")
+	return cmd
 }
 
 type Generator interface {

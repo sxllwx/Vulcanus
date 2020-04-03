@@ -4,7 +4,7 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
-	_ "github.com/sxllwx/vulcanus/pkg/scaffold/rest/container"
+	"github.com/sxllwx/vulcanus/pkg/scaffold/rest/container"
 	"github.com/sxllwx/vulcanus/pkg/scaffold/rest/ws"
 )
 
@@ -22,10 +22,6 @@ func main() {
 		},
 	}
 
-	rootCommand.AddCommand(ws.Command())
-	//rootCommand.AddCommand(ca.RootCommand)
-
-	if err := rootCommand.Execute(); err != nil {
-		panic(err)
-	}
+	rootCommand.AddCommand(ws.Command(), container.Command())
+	rootCommand.Execute()
 }

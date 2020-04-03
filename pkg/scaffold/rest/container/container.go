@@ -17,7 +17,7 @@ type containerGenerator struct {
 	config *containerConfig
 }
 
-func NewContainer(p *rest.Package, s *rest.Service, a *rest.Author) Generator {
+func NewContainer(p rest.Package, s rest.Service, a rest.Author) Generator {
 
 	return &containerGenerator{
 		Buffer: &bytes.Buffer{},
@@ -30,9 +30,9 @@ func NewContainer(p *rest.Package, s *rest.Service, a *rest.Author) Generator {
 }
 
 type containerConfig struct {
-	Package *rest.Package
-	Service *rest.Service
-	Author  *rest.Author
+	Package rest.Package
+	Service rest.Service
+	Author  rest.Author
 }
 
 func (g *containerGenerator) Generate() error {
@@ -40,15 +40,6 @@ func (g *containerGenerator) Generate() error {
 	if err := g.generateContainerConstructorFunc(); err != nil {
 		return errors.WithMessage(err, "generate container constructor func")
 	}
-
-	if err := g.generateRegisterOpenAPIFunc(); err != nil {
-		return errors.WithMessage(err, "generate register-open-api func")
-	}
-
-	if err := g.generateRichSwaggerDocFunc(); err != nil {
-		return errors.WithMessage(err, "generate rich swagger doc func")
-	}
-
 	return nil
 }
 
@@ -77,21 +68,8 @@ func NewContainer()*restful.Container{
 	}
 	c.Filter(cors.Filter)
 	return c
-}`
-
-	t, err := template.New("NewContainerTemplate").Parse(tmplt)
-	if err != nil {
-		return errors.WithMessage(err, "parse template")
-	}
-	if err := t.Execute(g.Buffer, g.config); err != nil {
-		return errors.WithMessage(err, "execute template")
-	}
-	return nil
 }
 
-func (g *containerGenerator) generateRegisterOpenAPIFunc() error {
-
-	const tmplt = `
 // RegisterOpenAPI
 // start the open-api docs in container
 func RegisterOpenAPI(c *restful.Container){
@@ -102,22 +80,7 @@ func RegisterOpenAPI(c *restful.Container){
 		PostBuildSwaggerObjectHandler: richSwaggerDoc,
 	}
 	c.Add(restfulspec.NewOpenAPIService(config))
-}`
-
-	t, err := template.New("RegisterOpenAPITemplate").Parse(tmplt)
-	if err != nil {
-		return errors.WithMessage(err, "parse template")
-	}
-	if err := t.Execute(g.Buffer, g.config); err != nil {
-		return errors.WithMessage(err, "execute template")
-	}
-	return nil
-
 }
-
-func (g *containerGenerator) generateRichSwaggerDocFunc() error {
-
-	const tmplt = `
 
 // add rich swagger doc, if user need help, he|she can connect with you
 func richSwaggerDoc(swaggerRootDoc *spec.Swagger){
@@ -128,9 +91,11 @@ func richSwaggerDoc(swaggerRootDoc *spec.Swagger){
 			Title:       "{{.Service.Title}}",
 			Description: "{{.Service.Description}}",
 			Contact: &spec.ContactInfo{
-				Name:  "{{.Author.Name}}",
-				Email: "{{.Author.Email}}",
-				URL:   "{{.Author.URL}}",
+				ContactInfoProps: spec.ContactInfoProps{
+				    Name:  "{{.Author.Name}}",
+				    Email: "{{.Author.Email}}",
+				    URL:   "{{.Author.URL}}",
+				},
 			},
 			Version: "{{.Service.Version}}",
 		},
@@ -139,16 +104,15 @@ func richSwaggerDoc(swaggerRootDoc *spec.Swagger){
 		Name:        "{{.Service.Tag.Name}}",
 		Description: "{{.Service.Tag.Description}}",
 	}}}
-}`
-
-	t, err := template.New("richSwaggerDocTemplate").Parse(tmplt)
+}
+`
+	t, err := template.New("NewContainerTemplate").Parse(tmplt)
 	if err != nil {
 		return errors.WithMessage(err, "parse template")
 	}
 	if err := t.Execute(g.Buffer, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
 	}
-
 	return nil
 }
 
