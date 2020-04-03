@@ -1,10 +1,9 @@
 package ws
 
 import (
+	"github.com/spf13/cobra"
 	"github.com/sxllwx/vulcanus/pkg/scaffold"
 	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"
-
-	"github.com/spf13/cobra"
 )
 
 type option struct {
@@ -24,8 +23,7 @@ func (o *option) run(cmd *cobra.Command, args []string) error {
 	return scaffold.Generate(NewWebService(p, s, m))
 }
 
-// register ws -> rest cmd
-func init() {
+func Command() *cobra.Command {
 
 	o := &option{}
 	cmd := &cobra.Command{
@@ -34,11 +32,9 @@ func init() {
 		RunE:  o.run,
 	}
 
-	cmd.Flags().StringVarP(&o.kind, "kind", "k", "", "your awesome webservice manage the kind of resource")
+	cmd.Flags().StringVarP(&o.kind, "kind", "k", "", "resource type")
 	cmd.MarkFlagRequired("kind")
-	cmd.Flags().StringVarP(&o.pkg, "package", "p", "", "your awesome package")
+	cmd.Flags().StringVarP(&o.pkg, "package", "p", "", "package name")
 	cmd.MarkFlagRequired("package")
-
-	rest.RootCommand.AddCommand(cmd)
-	return
+	return cmd
 }

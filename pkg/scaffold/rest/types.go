@@ -12,8 +12,8 @@ type Package struct {
 	Name string
 }
 
-func NewPackage(name string) *Package {
-	return &Package{Name: name}
+func NewPackage(name string) Package {
+	return Package{Name: name}
 }
 
 // the service tag for swagger
@@ -40,8 +40,8 @@ type Service struct {
 	Tag         *Tag
 }
 
-func NewService(kind string) *Service {
-	s := &Service{
+func NewService(kind string) Service {
+	s := Service{
 		Kind: kind,
 	}
 
@@ -89,12 +89,11 @@ type Model struct {
 	Name string
 }
 
-func NewModel(name string) *Model {
+func NewModel(name string) Model {
 
-	a := &Model{
+	return Model{
 		Name: name,
 	}
-	return a
 }
 
 func UpperKind(kind string) string {

@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Generator
+// code generator interface
 type Generator interface {
 	Generate() error
 	io.ReadWriter

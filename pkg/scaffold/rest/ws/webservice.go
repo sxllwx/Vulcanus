@@ -17,12 +17,12 @@ type webServiceGenerator struct {
 }
 
 type webServiceConfig struct {
-	Package *rest.Package
-	Service *rest.Service
-	Model   *rest.Model
+	Package rest.Package
+	Service rest.Service
+	Model   rest.Model
 }
 
-func NewWebService(p *rest.Package, s *rest.Service, m *rest.Model) scaffold.Generator {
+func NewWebService(p rest.Package, s rest.Service, m rest.Model) scaffold.Generator {
 
 	return &webServiceGenerator{
 		Buffer: &bytes.Buffer{},
@@ -40,17 +40,6 @@ func (g *webServiceGenerator) Generate() error {
 		return errors.WithMessage(err, "generate type")
 	}
 
-	if err := g.generateConstructorFunc(); err != nil {
-		return errors.WithMessage(err, "generate constructor")
-	}
-
-	if err := g.generateWsFunc(); err != nil {
-		return errors.WithMessage(err, "generate wsFunc")
-	}
-
-	if err := g.generateHandleFunc(); err != nil {
-		return errors.WithMessage(err, "generate wsFunc")
-	}
 	return nil
 
 }
@@ -77,22 +66,6 @@ type {{.Service.Type}} struct{
    ws *restful.WebService
    // TODO: add other useful field
 }
-`
-
-	t, err := template.New("types-tplt").Parse(tmplt)
-	if err != nil {
-		return errors.WithMessage(err, "parse template")
-	}
-
-	if err := t.Execute(g.Buffer, g.config); err != nil {
-		return errors.WithMessage(err, "execute template")
-	}
-	return nil
-}
-
-func (g *webServiceGenerator) generateConstructorFunc() error {
-
-	const tmplt = `
 
 func New{{.Service.Type}}()*{{.Service.Type}}{
    s := &{{.Service.Type}}{}
@@ -103,55 +76,29 @@ func New{{.Service.Type}}()*{{.Service.Type}}{
 func (s *{{.Service.Type}}) WebService()*restful.WebService{
 	return s.ws
 }
-`
-
-	t, err := template.New("constructor-tplt").Parse(tmplt)
-	if err != nil {
-		return errors.WithMessage(err, "parse template")
-	}
-
-	if err := t.Execute(g.Buffer, g.config); err != nil {
-		return errors.WithMessage(err, "execute template")
-	}
-	return nil
-}
-
-func (g *webServiceGenerator) generateWsFunc() error {
-
-	const tmplt = `
-func (s *{{.Service.Type}}) measureTime(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	now := time.Now()
-	chain.ProcessFilter(req, resp)
-	time.Now().Sub(now)
-}
 
 func (s *{{.Service.Type}}) installWebService(){
 	ws := new(restful.WebService)
 	ws.
-		Path("{{.Service.RootURLPrefix}}").
-		Consumes(restful.MIME_XML, restful.MIME_JSON).
-		Produces(restful.MIME_JSON, restful.MIME_XML) 
+		Path("{{.Service.RootURLPrefix}}")
 
 	tags := []string{"{{.Service.Tag.Name}}"}
 
 	ws.Route(ws.POST("").To(s.create).
 		// docs
 		Doc("create a {{.Service.Kind}}").
-		Filter(s.measureTime).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads({{.Model.Name}}{})) // from the request
 
 	ws.Route(ws.PATCH("").To(s.patch).
 		// docs
 		Doc("patch a {{.Service.Kind}}").
-		Filter(s.measureTime).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads([]byte{})) // from the request
 
 	ws.Route(ws.PUT("/{id}").To(s.update).
 		// docs
 		Doc("update a {{.Service.Kind}}").
-		Filter(s.measureTime).
 		Param(ws.PathParameter("id", "identifier of the {{.Service.Kind}}").DataType("string")).
 		// set more rich query condition
 		Param(ws.QueryParameter("", "").DataType("")).
@@ -164,7 +111,6 @@ func (s *{{.Service.Type}}) installWebService(){
 		// docs
 		Doc("list {{.Service.Kind}}").
 		// spec a useful filter 
-		Filter(s.measureTime).
 		// spec a spec query condition (the param stay in params)
 		Param(ws.QueryParameter("", "").DataType("")).
 		// spec a spec query condition (the param stay in header)
@@ -179,7 +125,6 @@ func (s *{{.Service.Type}}) installWebService(){
 		// docs
 		Doc("get a {{.Service.Kind}}").
 		// spec a useful filter
-		Filter(s.measureTime).
 		// spec a spec query condition (the param stay in params)
 		Param(ws.PathParameter("id", "identifier of the {{.Service.Kind}}").DataType("string")).
 		// TODO: QueryParameter 
@@ -195,40 +140,26 @@ func (s *{{.Service.Type}}) installWebService(){
 	ws.Route(ws.DELETE("/{id}").To(s.delete).
 		// docs
 		Doc("delete a {{.Service.Kind}}").
-		Filter(s.measureTime).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Param(ws.PathParameter("id", "identifier of the {{.Service.Kind}}").DataType("string")))
 
 	s.ws = ws
 }
-`
 
-	t, err := template.New("ws-func-tplt").Parse(tmplt)
-	if err != nil {
-		return errors.WithMessage(err, "parse template")
-	}
-
-	if err := t.Execute(g.Buffer, g.config); err != nil {
-		return errors.WithMessage(err, "execute template")
-	}
-	return nil
-}
-
-func (g *webServiceGenerator) generateHandleFunc() error {
-
-	const tmplt = `
 func (s *{{.Service.Type}})create(request *restful.Request, response *restful.Response){}
 func (s *{{.Service.Type}})patch(request *restful.Request, response *restful.Response){}
 func (s *{{.Service.Type}})list(request *restful.Request, response *restful.Response){}
 func (s *{{.Service.Type}})get(request *restful.Request, response *restful.Response){}
 func (s *{{.Service.Type}})delete(request *restful.Request, response *restful.Response){}
 func (s *{{.Service.Type}})update(request *restful.Request, response *restful.Response){}
+
 `
 
-	t, err := template.New("basic-handler-template").Parse(tmplt)
+	t, err := template.New("types-tplt").Parse(tmplt)
 	if err != nil {
 		return errors.WithMessage(err, "parse template")
 	}
+
 	if err := t.Execute(g.Buffer, g.config); err != nil {
 		return errors.WithMessage(err, "execute template")
 	}

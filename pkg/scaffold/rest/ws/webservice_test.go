@@ -9,7 +9,7 @@ import (
 
 func TestWS(t *testing.T) {
 
-	s := rest.NewService("books")
+	s := rest.NewService("book")
 	p := rest.NewPackage("main")
 	m := rest.NewModel("Book")
 	wsG := NewWebService(p, s, m)

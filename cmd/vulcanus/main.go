@@ -1,25 +1,31 @@
 package main
 
 import (
-	"log"
 	"runtime"
 
-	"github.com/sxllwx/vulcanus/pkg/scaffold/ca"
-	_ "github.com/sxllwx/vulcanus/pkg/scaffold/ca/init"
-	_ "github.com/sxllwx/vulcanus/pkg/scaffold/ca/sign"
-	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"
+	"github.com/spf13/cobra"
 	_ "github.com/sxllwx/vulcanus/pkg/scaffold/rest/container"
-	_ "github.com/sxllwx/vulcanus/pkg/scaffold/rest/ws"
+	"github.com/sxllwx/vulcanus/pkg/scaffold/rest/ws"
 )
 
 func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	rootCommand.AddCommand(rest.RootCommand)
-	rootCommand.AddCommand(ca.RootCommand)
+	rootCommand := &cobra.Command{
+		Use:   "vulcanus",
+		Short: "vulcanus is a very awesome golang code generator",
+		Run: func(cmd *cobra.Command, args []string) {
+			// out put the help
+			cmd.Help()
+			return
+		},
+	}
+
+	rootCommand.AddCommand(ws.Command())
+	//rootCommand.AddCommand(ca.RootCommand)
 
 	if err := rootCommand.Execute(); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
