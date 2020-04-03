@@ -24,11 +24,6 @@ type measurable interface {
 	stop()
 }
 
-type MeasurableWriteCloser interface {
-	measurable
-	io.WriteCloser
-}
-
 type MeasurableReadWriteCloser interface {
 	ReadMetric() measurable
 	WriteMetric() measurable
