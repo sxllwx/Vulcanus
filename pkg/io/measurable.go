@@ -1,4 +1,4 @@
-package net
+package io
 
 import (
 	"context"
@@ -8,36 +8,8 @@ import (
 	"time"
 )
 
-type measurable interface {
-
-	// real time metric
-	BytesPerSecond() uint64
-
-	// average metric
-	TotalBytes() uint64
-	Cost() time.Duration
-	AverageBytesPerSecond() float64
-
-	addTotal(uint64)
-	stop()
-}
-
-type MeasurableWriteCloser interface {
-	measurable
-	io.WriteCloser
-}
-
-type MeasurableReadCloser interface {
-	measurable
-	io.ReadCloser
-}
-
-type MeasurableConn interface {
-	ReadMetric() measurable
-	WriteMetric() measurable
-	net.Conn
-}
-
+// default Measurable Suite
+// basic model of the metric of everyone call be measurable
 type defaultMeasurableSuite struct {
 
 	// lifecycle manager
@@ -91,6 +63,8 @@ func newMeasurableSuite() *defaultMeasurableSuite {
 	return out
 }
 
+// loop
+// calculate the metric
 func (r *defaultMeasurableSuite) loop() {
 
 	for {
@@ -110,67 +84,55 @@ func (r *defaultMeasurableSuite) loop() {
 
 }
 
-type readCloser struct {
-	measurable
-	io.ReadCloser
+type readWriteCloser struct {
+	rm measurable
+	wm measurable
+	io.ReadWriteCloser
 }
 
-func DecorateReadCloser(rc io.ReadCloser) MeasurableReadCloser {
-	return &readCloser{
-		measurable: newMeasurableSuite(),
-		ReadCloser: rc,
+// Wrapper  io.ReadWriteCloser to MeasurableReadWriteCloser
+func DecorateReadWriteCloser(rwc io.ReadWriteCloser) MeasurableReadWriteCloser {
+	return &readWriteCloser{
+		rm:              newMeasurableSuite(),
+		wm:              newMeasurableSuite(),
+		ReadWriteCloser: rwc,
 	}
 }
 
-func (rc *readCloser) Close() error {
-	rc.stop()
-	return rc.ReadCloser.Close()
+func (rwc *readWriteCloser) ReadMetric() measurable {
+	return rwc.rm
 }
-func (rc *readCloser) Read(b []byte) (int, error) {
 
-	n, err := rc.ReadCloser.Read(b)
+func (rwc *readWriteCloser) WriteMetric() measurable {
+	return rwc.wm
+}
+
+func (rwc *readWriteCloser) Close() error {
+	rwc.rm.stop()
+	rwc.wm.stop()
+	return rwc.ReadWriteCloser.Close()
+}
+
+func (rwc *readWriteCloser) Read(b []byte) (int, error) {
+
+	n, err := rwc.ReadWriteCloser.Read(b)
 	if err != nil {
 		return 0, err
 	}
 
-	rc.measurable.addTotal(uint64(n))
+	rwc.rm.addTotal(uint64(n))
 	return n, nil
 }
 
-func (rc *readCloser) FD() io.ReadCloser {
-	return rc.ReadCloser
-}
+func (rwc *readWriteCloser) Write(b []byte) (int, error) {
 
-type writeCloser struct {
-	measurable
-	io.WriteCloser
-}
-
-func DecorateWriteCloser(wc io.WriteCloser) MeasurableWriteCloser {
-	return &writeCloser{
-		measurable:  newMeasurableSuite(),
-		WriteCloser: wc,
-	}
-}
-
-func (wc *writeCloser) FD() io.WriteCloser {
-	return wc.WriteCloser
-}
-
-func (wc *writeCloser) Write(b []byte) (int, error) {
-
-	n, err := wc.WriteCloser.Write(b)
+	n, err := rwc.ReadWriteCloser.Write(b)
 	if err != nil {
 		return 0, err
 	}
 
-	wc.measurable.addTotal(uint64(n))
+	rwc.wm.addTotal(uint64(n))
 	return n, nil
-}
-
-func (wc *writeCloser) Close() error {
-	wc.stop()
-	return wc.WriteCloser.Close()
 }
 
 type conn struct {
@@ -179,6 +141,7 @@ type conn struct {
 	net.Conn
 }
 
+// wrapper net.Conn to  MeasurableConn
 func DecorateConn(c net.Conn) MeasurableConn {
 	return &conn{
 		rm:   newMeasurableSuite(),
