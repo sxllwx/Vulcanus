@@ -28,7 +28,7 @@ func Command() *cobra.Command {
 	o := &option{}
 	cmd := &cobra.Command{
 		Use:   "ws",
-		Short: "use to generate web-service code",
+		Short: "generate web-service code",
 		RunE:  o.run,
 	}
 

@@ -36,7 +36,7 @@ func Command() *cobra.Command {
 	o := &option{}
 	cmd := &cobra.Command{
 		Use:   "container",
-		Short: "use to generate container code",
+		Short: "generate container code",
 		RunE:  o.run,
 	}
 
