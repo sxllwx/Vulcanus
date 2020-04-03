@@ -5,13 +5,13 @@ import (
 	"context"
 	"sync"
 
-	"github.com/sxllwx/vulcanus/pkg/store"
+	"github.com/sxllwx/vulcanus/pkg/cache"
 )
 
 type stack struct {
 
 	// manage the  stack lifecycle
-	store.LifeCycle
+	cache.LifeCycle
 
 	lock  sync.RWMutex
 	store *list.List
@@ -28,7 +28,7 @@ func (s *stack) Len() (int, error) {
 func (s *stack) Rest() ([]interface{}, error) {
 
 	if s.Alive() {
-		return nil, store.ErrRestShouldNotBeCall
+		return nil, cache.ErrRestShouldNotBeCall
 	}
 
 	// already stopped
@@ -51,7 +51,7 @@ func (s *stack) Push(e interface{}) error {
 func (s *stack) pushElement(e interface{}) error {
 
 	if !s.Alive() {
-		return store.ErrContainerAlreadyClosed
+		return cache.ErrContainerAlreadyClosed
 	}
 	s.store.PushBack(e)
 	return nil
@@ -61,14 +61,14 @@ func (s *stack) pushElement(e interface{}) error {
 func (s *stack) popElement() (interface{}, error) {
 
 	if !s.Alive() {
-		return nil, store.ErrContainerAlreadyClosed
+		return nil, cache.ErrContainerAlreadyClosed
 	}
 
 	out := s.store.Back()
 	if out != nil {
 		return s.store.Remove(out), nil
 	}
-	return nil, store.ErrContainerEmpty
+	return nil, cache.ErrContainerEmpty
 }
 
 func (s *stack) Pop() (interface{}, error) {
@@ -79,10 +79,10 @@ func (s *stack) Pop() (interface{}, error) {
 	return s.popElement()
 }
 
-func NewStack(ctx context.Context) store.Stack {
+func NewStack(ctx context.Context) cache.Stack {
 
 	return &stack{
-		LifeCycle: store.NewLifeCycle(ctx),
+		LifeCycle: cache.NewLifeCycle(ctx),
 		store:     list.New(),
 	}
 }
@@ -91,14 +91,14 @@ type blockStack struct {
 	stack
 
 	cond         *sync.Cond
-	burstChecker store.BurstChecker
+	burstChecker cache.BurstChecker
 }
 
-func NewBlockStack(ctx context.Context, checker store.BurstChecker) store.Stack {
+func NewBlockStack(ctx context.Context, checker cache.BurstChecker) cache.Stack {
 
 	out := &blockStack{
 		stack: stack{
-			LifeCycle: store.NewLifeCycle(ctx),
+			LifeCycle: cache.NewLifeCycle(ctx),
 			store:     list.New(),
 		},
 		burstChecker: checker,

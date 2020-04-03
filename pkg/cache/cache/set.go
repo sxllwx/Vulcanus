@@ -4,11 +4,11 @@ import (
 	"context"
 	"sync"
 
-	"github.com/sxllwx/vulcanus/pkg/store"
+	"github.com/sxllwx/vulcanus/pkg/cache"
 )
 
 type set struct {
-	store.LifeCycle
+	cache.LifeCycle
 
 	lock  sync.RWMutex
 	store map[interface{}]struct{}
@@ -23,7 +23,7 @@ func (s *set) Wait() error {
 func (s *set) Rest() ([]interface{}, error) {
 
 	if s.Alive() {
-		return nil, store.ErrRestShouldNotBeCall
+		return nil, cache.ErrRestShouldNotBeCall
 	}
 
 	var out []interface{}
@@ -43,7 +43,7 @@ func (s *set) Len() (int, error) {
 func (s *set) addElement(e interface{}) error {
 
 	if !s.Alive() {
-		return store.ErrContainerAlreadyClosed
+		return cache.ErrContainerAlreadyClosed
 	}
 
 	s.store[e] = struct{}{}
@@ -54,11 +54,11 @@ func (s *set) addElement(e interface{}) error {
 func (s *set) getElement() (interface{}, error) {
 
 	if !s.Alive() {
-		return nil, store.ErrContainerAlreadyClosed
+		return nil, cache.ErrContainerAlreadyClosed
 	}
 
 	if len(s.store) == 0 {
-		return nil, store.ErrContainerEmpty
+		return nil, cache.ErrContainerEmpty
 	}
 
 	for k, _ := range s.store {
@@ -90,7 +90,7 @@ func (s *set) List() ([]interface{}, error) {
 	defer s.lock.Unlock()
 
 	if !s.Alive() {
-		return nil, store.ErrContainerAlreadyClosed
+		return nil, cache.ErrContainerAlreadyClosed
 	}
 
 	var out []interface{}
@@ -110,21 +110,21 @@ func (s *set) Close() error {
 	return nil
 }
 
-func NewSet(parent context.Context) store.Set {
+func NewSet(parent context.Context) cache.Set {
 
 	return &set{
-		LifeCycle: store.NewLifeCycle(parent),
+		LifeCycle: cache.NewLifeCycle(parent),
 		store:     map[interface{}]struct{}{},
 	}
 }
 
-func NewBlockSet(parent context.Context, check store.BurstChecker) store.Set {
+func NewBlockSet(parent context.Context, check cache.BurstChecker) cache.Set {
 
 	out := &blockSet{
 
 		set: set{
 
-			LifeCycle: store.NewLifeCycle(parent),
+			LifeCycle: cache.NewLifeCycle(parent),
 			store:     map[interface{}]struct{}{},
 		},
 		checker: check,
@@ -138,7 +138,7 @@ type blockSet struct {
 	set
 
 	cond    *sync.Cond
-	checker store.BurstChecker
+	checker cache.BurstChecker
 }
 
 func (s *blockSet) Put(e interface{}) error {

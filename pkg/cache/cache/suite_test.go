@@ -8,20 +8,20 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/sxllwx/vulcanus/pkg/store"
+	"github.com/sxllwx/vulcanus/pkg/cache"
 )
 
 type cacheTestSuit struct {
 	suite.Suite
 
-	stack      store.Stack
-	blockStack store.Stack
+	stack      cache.Stack
+	blockStack cache.Stack
 
-	queue      store.DoubleEndQueue
-	blockQueue store.DoubleEndQueue
+	queue      cache.DoubleEndQueue
+	blockQueue cache.DoubleEndQueue
 
-	set      store.Set
-	blockSet store.Set
+	set      cache.Set
+	blockSet cache.Set
 }
 
 func (s *cacheTestSuit) SetupSuite() {

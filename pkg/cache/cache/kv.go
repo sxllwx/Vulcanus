@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sxllwx/vulcanus/pkg/store"
+	"github.com/sxllwx/vulcanus/pkg/cache"
 )
 
 type entry struct {
@@ -13,7 +13,7 @@ type entry struct {
 }
 
 type kvStore struct {
-	store.LifeCycle
+	cache.LifeCycle
 
 	lock  sync.RWMutex
 	store map[string]*entry
@@ -25,7 +25,7 @@ func (s *kvStore) Put(k string, v []byte) error {
 	defer s.lock.Unlock()
 
 	if !s.Alive() {
-		return store.ErrContainerAlreadyClosed
+		return cache.ErrContainerAlreadyClosed
 	}
 
 	s.store[k] = &entry{
@@ -40,11 +40,11 @@ func (s *kvStore) Get(k string) ([]byte, error) {
 	defer s.lock.RUnlock()
 
 	if !s.Alive() {
-		return nil, store.ErrContainerAlreadyClosed
+		return nil, cache.ErrContainerAlreadyClosed
 	}
 	out, ok := s.store[k]
 	if !ok {
-		return nil, store.ErrNotFound
+		return nil, cache.ErrNotFound
 	}
 	return out.data, nil
 }
@@ -55,7 +55,7 @@ func (s *kvStore) Delete(k string) error {
 	defer s.lock.Unlock()
 
 	if !s.Alive() {
-		return store.ErrContainerAlreadyClosed
+		return cache.ErrContainerAlreadyClosed
 	}
 
 	delete(s.store, k)
@@ -82,7 +82,7 @@ func (s *kvStore) TTL(k string, ttl time.Duration) error {
 
 	out, ok := s.store[k]
 	if !ok {
-		return store.ErrNotFound
+		return cache.ErrNotFound
 	}
 
 	// stop old timer
@@ -116,7 +116,7 @@ func (s *kvStore) TTL(k string, ttl time.Duration) error {
 func (s *kvStore) Rest() ([]interface{}, error) {
 
 	if s.Alive() {
-		return nil, store.ErrRestShouldNotBeCall
+		return nil, cache.ErrRestShouldNotBeCall
 	}
 
 	// TODO

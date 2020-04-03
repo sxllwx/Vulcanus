@@ -1,4 +1,4 @@
-package store
+package cache
 
 import (
 	"context"
@@ -14,11 +14,15 @@ var (
 	ErrNotFound               = errors.New("the element not be found in container")
 )
 
-// NiceContainer
-// when the container be closed, then notify the done
-// when the container be closed, the goroutines can wait the container stop
-type NiceContainer interface {
+// Interface
+// when the store be closed, then notify the done
+// when the store be closed, the goroutines can wait the container stop
+type Interface interface {
+
+	// can be closed
 	io.Closer
+
+	// stop notify chan
 	Done() <-chan struct{}
 
 	// every goroutine can got the rest element from the stopped store
@@ -28,46 +32,51 @@ type NiceContainer interface {
 	Len() (int, error)
 }
 
-// BlockContainer
-// when the container is full, the current goroutine insert operation will block until the space free
-// when the container is empty, the current goroutine pop operation will block until the element was be added
-type BlockContainer interface {
-	BlockRequest() // just a flag method
-}
-
-type BurstChecker func(int) bool
-
-type LifeCycle struct {
+type lifeCycle struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-// if the parent be closed, the LifeCycle ctx.Done() also be closed
-func NewLifeCycle(parent context.Context) LifeCycle {
+// if the parent be closed, the lifeCycle ctx.Done() also be closed
+func newLifeCycle(parent context.Context) lifeCycle {
 
 	ctx, cancel := context.WithCancel(parent)
-	return LifeCycle{
+	return lifeCycle{
 		ctx:    ctx,
 		cancel: cancel,
 	}
 
 }
 
-func (lc *LifeCycle) Done() <-chan struct{} {
+func (lc *lifeCycle) Done() <-chan struct{} {
 	return lc.ctx.Done()
 }
 
-func (lc *LifeCycle) Close() error {
+func (lc *lifeCycle) Close() error {
 	lc.cancel()
 	return nil
 }
 
-func (lc *LifeCycle) Alive() bool {
-
+// if the cache is alive
+func (lc *lifeCycle) ok() bool {
 	select {
 	case <-lc.Done():
 		return false
 	default:
 		return true
 	}
+}
+
+type eventType string
+
+const (
+	// the event-type
+	Update eventType = "update"
+	Create eventType = "create"
+	Delete eventType = "delete"
+)
+
+type Event struct {
+	Object interface{}
+	Event  eventType
 }

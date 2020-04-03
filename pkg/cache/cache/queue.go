@@ -5,13 +5,13 @@ import (
 	"context"
 	"sync"
 
-	"github.com/sxllwx/vulcanus/pkg/store"
+	"github.com/sxllwx/vulcanus/pkg/cache"
 )
 
 type queue struct {
 
 	// manage the  stack lifecycle
-	store.LifeCycle
+	cache.LifeCycle
 
 	lock  sync.RWMutex
 	store *list.List
@@ -28,7 +28,7 @@ func (q *queue) Len() (int, error) {
 func (q *queue) Rest() ([]interface{}, error) {
 
 	if q.Alive() {
-		return nil, store.ErrRestShouldNotBeCall
+		return nil, cache.ErrRestShouldNotBeCall
 	}
 
 	// already stopped
@@ -43,7 +43,7 @@ func (q *queue) Rest() ([]interface{}, error) {
 func (q *queue) addElementToHeader(e interface{}) error {
 
 	if !q.Alive() {
-		return store.ErrContainerAlreadyClosed
+		return cache.ErrContainerAlreadyClosed
 	}
 	q.store.PushFront(e)
 	return nil
@@ -53,7 +53,7 @@ func (q *queue) addElementToHeader(e interface{}) error {
 func (q *queue) addElementToTail(e interface{}) error {
 
 	if !q.Alive() {
-		return store.ErrContainerAlreadyClosed
+		return cache.ErrContainerAlreadyClosed
 	}
 	q.store.PushBack(e)
 	return nil
@@ -63,12 +63,12 @@ func (q *queue) addElementToTail(e interface{}) error {
 func (q *queue) getElementFromHeader() (interface{}, error) {
 
 	if !q.Alive() {
-		return nil, store.ErrContainerAlreadyClosed
+		return nil, cache.ErrContainerAlreadyClosed
 	}
 
 	e := q.store.Front()
 	if e == nil {
-		return nil, store.ErrContainerEmpty
+		return nil, cache.ErrContainerEmpty
 	}
 	return q.store.Remove(e), nil
 }
@@ -77,12 +77,12 @@ func (q *queue) getElementFromHeader() (interface{}, error) {
 func (q *queue) getElementFromTail() (interface{}, error) {
 
 	if !q.Alive() {
-		return nil, store.ErrContainerAlreadyClosed
+		return nil, cache.ErrContainerAlreadyClosed
 	}
 
 	e := q.store.Back()
 	if e == nil {
-		return nil, store.ErrContainerEmpty
+		return nil, cache.ErrContainerEmpty
 	}
 	return q.store.Remove(e), nil
 }
@@ -120,10 +120,10 @@ func (q *queue) DeQueueFromTail() (interface{}, error) {
 	return q.getElementFromTail()
 }
 
-func NewDeQueue(ctx context.Context) store.DoubleEndQueue {
+func NewDeQueue(ctx context.Context) cache.DoubleEndQueue {
 
 	return &queue{
-		LifeCycle: store.NewLifeCycle(ctx),
+		LifeCycle: cache.NewLifeCycle(ctx),
 		store:     list.New(),
 	}
 }
@@ -132,14 +132,14 @@ type blockQueue struct {
 	queue
 
 	cond         *sync.Cond
-	burstChecker store.BurstChecker
+	burstChecker cache.BurstChecker
 }
 
-func NewBlockDeQueue(ctx context.Context, checker store.BurstChecker) store.DoubleEndQueue {
+func NewBlockDeQueue(ctx context.Context, checker cache.BurstChecker) cache.DoubleEndQueue {
 
 	out := &blockQueue{
 		queue: queue{
-			LifeCycle: store.NewLifeCycle(ctx),
+			LifeCycle: cache.NewLifeCycle(ctx),
 			store:     list.New(),
 		},
 		burstChecker: checker,

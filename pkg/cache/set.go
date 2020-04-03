@@ -1,4 +1,4 @@
-package store
+package cache
 
 type Set interface {
 	NiceContainer
