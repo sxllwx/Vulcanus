@@ -1,13 +1,8 @@
 package broadcast
 
 import (
-	"sync"
-
 	"github.com/pkg/errors"
-)
-
-var (
-	ErrBroadCasterAlreadyStop = errors.New("broadcaster already stopped")
+	"sync"
 )
 
 type FullChannelBehavior int
@@ -17,14 +12,30 @@ const (
 	DropIfChannelFull
 )
 
+var (
+	ErrBroadCasterStopped = errors.New("broadcaster already stopped")
+)
+
 type EventType string
 
 const (
-	Create    EventType = "create"
-	Update    EventType = "update"
-	Delete    EventType = "delete"
-	opWatcher EventType = "" // special event type, add | delete watcher
+	Create           EventType = "create"
+	Update           EventType = "update"
+	Delete           EventType = "delete"
+	opWatcher        EventType = "op" // special event type, add | delete watcher
+	closeBroadCaster EventType = "close-broadcaster"
 )
+
+type SynchronizedBroadCaster interface {
+	Action(EventType, interface{}) error
+	Shutdown() error
+	Watch() (Watcher, error)
+}
+
+type Watcher interface {
+	ResultChan() <-chan Event
+	Stop() error
+}
 
 // event
 type Event struct {
@@ -40,20 +51,20 @@ type broadCaster struct {
 	watcherBuffSize int
 
 	// event sink,
-	sink chan Event
+	once sync.Once
+	stop chan struct{}
 
-	stopOnce sync.Once
-	stop     chan struct{}
+	sink chan Event
 
 	b FullChannelBehavior
 }
 
 // New a broadcast
-func New(watchBufSize int, b FullChannelBehavior) *broadCaster {
+func New(watchBufSize int, b FullChannelBehavior) SynchronizedBroadCaster {
 
 	out := &broadCaster{
 		watchers:        make(map[uint64]*watcherImpl),
-		sink:            make(chan Event, 16),
+		sink:            make(chan Event),
 		watcherBuffSize: watchBufSize,
 		b:               b,
 		stop:            make(chan struct{}),
@@ -65,15 +76,26 @@ func New(watchBufSize int, b FullChannelBehavior) *broadCaster {
 
 func (b *broadCaster) loop() {
 
-	for e := range b.sink {
-		b.distribute(e)
-	}
-	b.shutdownAllWatchers()
-}
+	for {
+		select {
+		case e := <-b.sink:
 
-func (b *broadCaster) shutdownAllWatchers() {
-	for i := range b.watchers {
-		b.deleteWatcher(i)
+			if e.Type == closeBroadCaster {
+				e.Object.(func())()
+				// the broadcaster closed
+				return
+			}
+
+			if e.Type == opWatcher {
+				// handle watcher operation
+				e.Object.(func())()
+				continue
+			}
+
+			for _, w := range b.watchers {
+				b.sendTo(e, w)
+			}
+		}
 	}
 }
 
@@ -81,30 +103,32 @@ func (b *broadCaster) Done() <-chan struct{} {
 	return b.stop
 }
 
-func (b *broadCaster) Action(e Event) error {
+func (b *broadCaster) Action(eventType EventType, object interface{}) error {
+
+	e := Event{
+		Type:   eventType,
+		Object: object,
+	}
+
 	select {
 	case <-b.stop:
-		return ErrBroadCasterAlreadyStop
-	default:
-		b.sink <- e
+		return ErrBroadCasterStopped
+	case b.sink <- e:
 		return nil
 	}
 }
 
-func (b *broadCaster) Watch() (*watcherImpl, error) {
+func (b *broadCaster) Watch() (Watcher, error) {
 	return b.newWatcher()
 }
 
-func (b *broadCaster) newWatcher() (*watcherImpl, error) {
+func (b *broadCaster) newWatcher() (Watcher, error) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	var out *watcherImpl
-	if err := b.Action(Event{
-		Type: opWatcher,
-		Object: func() {
-			out = b.addWatcher()
-			wg.Done()
-		},
+	if err := b.Action(opWatcher, func() {
+		out = b.addWatcher()
+		wg.Done()
 	}); err != nil {
 		return nil, err
 	}
@@ -113,37 +137,16 @@ func (b *broadCaster) newWatcher() (*watcherImpl, error) {
 }
 func (b *broadCaster) stopWatcher(watcher *watcherImpl) error {
 
-	watcher.stopOnce.Do(func() {
-		close(watcher.stop)
-	})
-
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	if err := b.Action(Event{
-		Type: opWatcher,
-		Object: func() {
-			b.deleteWatcher(watcher.id)
-			wg.Done()
-		},
+	if err := b.Action(opWatcher, func() {
+		b.deleteWatcher(watcher.id)
+		wg.Done()
 	}); err != nil {
 		return err
 	}
 	wg.Wait()
 	return nil
-}
-
-func (b *broadCaster) distribute(e Event) {
-
-	if e.Type == opWatcher {
-		// handle watcher operation
-		e.Object.(func())()
-		return
-	}
-
-	// this is a normal event
-	for _, w := range b.watchers {
-		b.sendTo(e, w)
-	}
 }
 
 // broadcaster promise never send event to a stopped watcher
@@ -153,13 +156,11 @@ func (b *broadCaster) sendTo(e Event, w *watcherImpl) {
 	case DropIfChannelFull:
 		select {
 		case w.resultChan <- e: // send success
-		case <-w.stop:
 		default: // watcher be blocked
 		}
 	case WaitIfChannelFull:
 		select {
 		case w.resultChan <- e: // send success
-		case <-w.stop:
 		}
 	}
 }
@@ -188,22 +189,30 @@ func (b *broadCaster) deleteWatcher(id uint64) {
 	close(w.resultChan)
 }
 
-func (b *broadCaster) Shutdown() {
+func (b *broadCaster) Shutdown() error {
 
-	b.stopOnce.Do(func() {
-		// 2. close stop to notify done
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	if err := b.Action(closeBroadCaster, func() {
+		// remove current watchers
+		for i := range b.watchers {
+			b.deleteWatcher(i)
+		}
 		close(b.stop)
-		// 3. close sink
-		close(b.sink)
-	})
+		wg.Done()
+	}); err != nil {
+		return err
+	}
+	wg.Wait()
+	return nil
 }
 
 type watcherImpl struct {
 	id         uint64
 	resultChan chan Event
 
-	stop     chan struct{}
 	stopOnce sync.Once
+	stop     chan struct{}
 
 	b *broadCaster
 }
@@ -213,13 +222,18 @@ func newWatcher(id uint64, b *broadCaster) *watcherImpl {
 	return &watcherImpl{
 		id:         id,
 		resultChan: make(chan Event, b.watcherBuffSize),
-		stop:       make(chan struct{}),
 		b:          b,
 	}
 }
 
 func (w *watcherImpl) Stop() error {
 
+	select {
+	case <-w.b.stop:
+		// broadcaster already stop, watcher already clean
+		return nil
+	default:
+	}
 	return w.b.stopWatcher(w)
 }
 
