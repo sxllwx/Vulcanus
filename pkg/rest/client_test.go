@@ -22,7 +22,7 @@ func TestClientGet(t *testing.T) {
 	if err := result.Process(func(response *http.Response) error {
 		_, err := io.Copy(os.Stdout, response.Body)
 		return err
-	}); err != nil {
+	}, func(resp *http.Response) error { return nil }); err != nil {
 		t.Fatal(err)
 	}
 
