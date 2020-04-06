@@ -1,4 +1,4 @@
-package rest
+package restclient
 
 import (
 	"github.com/pkg/errors"

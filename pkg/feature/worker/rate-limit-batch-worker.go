@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/juju/errors"
-	"github.com/sxllwx/vulcanus/pkg/cache/store"
+	"github.com/sxllwx/vulcanus/pkg/feature/cache/store"
 )
 
 type RateLimiterBatchConsumer interface {
@@ -132,7 +132,7 @@ func (c *rateLimiterBatchConsumerImpl) findThreshHold() ([]interface{}, error) {
 	// STEP.1 get win size elements
 	// STEP.2 append to bucket, then burst-check
 	//         not burst: {put wind <<= 1 && put got elements to packaged} goto STEP.1
-	//         burst: the rest element is got elements
+	//         burst: the restclient element is got elements
 	for {
 
 		got, err := c.store.Batch(wind)
@@ -200,7 +200,7 @@ func (c *rateLimiterBatchConsumerImpl) evalTailThreshHold(
 		bucket = packaged
 	)
 
-	// STEP.1 get the wind size elements from rest,
+	// STEP.1 get the wind size elements from restclient,
 	// STEP.2 append the elements to bucket
 	// STEP.3 burst check
 	//          not burst {put wind <<=1 && put got elements to bucket && increase the tailThreshHold} goto STEP.1
@@ -212,13 +212,13 @@ func (c *rateLimiterBatchConsumerImpl) evalTailThreshHold(
 
 		switch {
 		case len(rest) == 0:
-			// the rest empty
+			// the restclient empty
 			return nil
 		case wind >= len(rest):
-			// the rest is already not enough
+			// the restclient is already not enough
 			got, rest = rest, nil
 		default:
-			// rich rest,direct slice it
+			// rich restclient,direct slice it
 			got, rest = rest[:wind], rest[wind:]
 		}
 

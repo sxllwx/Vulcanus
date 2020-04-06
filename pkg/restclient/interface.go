@@ -1,4 +1,4 @@
-package rest
+package restclient
 
 type Interface interface {
 	GET() *request

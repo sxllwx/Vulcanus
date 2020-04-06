@@ -1,4 +1,4 @@
-package broadcast
+package watch
 
 import (
 	"net/http"
@@ -163,7 +163,7 @@ func TestBroadcasterDropIfChannelFull(t *testing.T) {
 		}
 	}
 
-	// Send a couple events before closing the broadcast channel.
+	// Send a couple events before closing the watch channel.
 	if err := m.Action(event1.Type, event1.Object); err != nil {
 		t.Fatal(err)
 	}

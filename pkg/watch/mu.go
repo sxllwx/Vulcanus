@@ -1,4 +1,4 @@
-package broadcast
+package watch
 
 import (
 	"github.com/pkg/errors"
@@ -59,7 +59,7 @@ type broadCaster struct {
 	b FullChannelBehavior
 }
 
-// New a broadcast
+// New a watch
 func New(watchBufSize int, b FullChannelBehavior) SynchronizedBroadCaster {
 
 	out := &broadCaster{

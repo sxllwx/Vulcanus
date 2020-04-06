@@ -2,26 +2,26 @@ package cache
 
 import (
 	"context"
+	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 	"net/http"
 	_ "net/http/pprof"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/sxllwx/vulcanus/pkg/cache"
 )
 
 type cacheTestSuit struct {
 	suite.Suite
 
-	stack      cache.Stack
-	blockStack cache.Stack
+	stack      cache2.Stack
+	blockStack cache2.Stack
 
-	queue      cache.DoubleEndQueue
-	blockQueue cache.DoubleEndQueue
+	queue      cache2.DoubleEndQueue
+	blockQueue cache2.DoubleEndQueue
 
-	set      cache.Set
-	blockSet cache.Set
+	set      cache2.Set
+	blockSet cache2.Set
 }
 
 func (s *cacheTestSuit) SetupSuite() {
@@ -51,19 +51,19 @@ func (s *cacheTestSuit) TearDownSuite() {
 	s.stack.Close()
 	rest, err := s.stack.Rest()
 	assert.Nil(s.T(), err)
-	s.T().Logf("got rest from stack: %v", rest)
+	s.T().Logf("got restclient from stack: %v", rest)
 
 	s.blockStack.Close()
 
 	s.blockQueue.Close()
 	rest, err = s.blockQueue.Rest()
 	assert.Nil(s.T(), err)
-	s.T().Logf("got rest from block queue: %v", rest)
+	s.T().Logf("got restclient from block queue: %v", rest)
 
 	s.blockSet.Close()
 	rest, err = s.blockSet.Rest()
 	assert.Nil(s.T(), err)
-	s.T().Logf("got rest from block set: %v", rest)
+	s.T().Logf("got restclient from block set: %v", rest)
 }
 
 func TestCacheSuite(t *testing.T) {

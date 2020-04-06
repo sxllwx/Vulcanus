@@ -2,9 +2,10 @@ package cache
 
 import (
 	"context"
+	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 	"sync"
 
-	"github.com/sxllwx/vulcanus/pkg/cache"
+	"github.com/sxllwx/vulcanus/pkg/feature/cachere/cache"
 )
 
 type set struct {
@@ -23,7 +24,7 @@ func (s *set) Wait() error {
 func (s *set) Rest() ([]interface{}, error) {
 
 	if s.Alive() {
-		return nil, cache.ErrRestShouldNotBeCall
+		return nil, cache2.ErrRestShouldNotBeCall
 	}
 
 	var out []interface{}
@@ -43,7 +44,7 @@ func (s *set) Len() (int, error) {
 func (s *set) addElement(e interface{}) error {
 
 	if !s.Alive() {
-		return cache.ErrContainerAlreadyClosed
+		return cache2.ErrContainerAlreadyClosed
 	}
 
 	s.store[e] = struct{}{}
@@ -54,11 +55,11 @@ func (s *set) addElement(e interface{}) error {
 func (s *set) getElement() (interface{}, error) {
 
 	if !s.Alive() {
-		return nil, cache.ErrContainerAlreadyClosed
+		return nil, cache2.ErrContainerAlreadyClosed
 	}
 
 	if len(s.store) == 0 {
-		return nil, cache.ErrContainerEmpty
+		return nil, cache2.ErrContainerEmpty
 	}
 
 	for k, _ := range s.store {
@@ -90,7 +91,7 @@ func (s *set) List() ([]interface{}, error) {
 	defer s.lock.Unlock()
 
 	if !s.Alive() {
-		return nil, cache.ErrContainerAlreadyClosed
+		return nil, cache2.ErrContainerAlreadyClosed
 	}
 
 	var out []interface{}
@@ -110,7 +111,7 @@ func (s *set) Close() error {
 	return nil
 }
 
-func NewSet(parent context.Context) cache.Set {
+func NewSet(parent context.Context) cache2.Set {
 
 	return &set{
 		LifeCycle: cache.NewLifeCycle(parent),
@@ -118,7 +119,7 @@ func NewSet(parent context.Context) cache.Set {
 	}
 }
 
-func NewBlockSet(parent context.Context, check cache.BurstChecker) cache.Set {
+func NewBlockSet(parent context.Context, check cache.BurstChecker) cache2.Set {
 
 	out := &blockSet{
 

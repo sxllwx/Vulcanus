@@ -3,9 +3,10 @@ package cache
 import (
 	"container/list"
 	"context"
+	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 	"sync"
 
-	"github.com/sxllwx/vulcanus/pkg/cache"
+	"github.com/sxllwx/vulcanus/pkg/feature/cachere/cache"
 )
 
 type queue struct {
@@ -28,7 +29,7 @@ func (q *queue) Len() (int, error) {
 func (q *queue) Rest() ([]interface{}, error) {
 
 	if q.Alive() {
-		return nil, cache.ErrRestShouldNotBeCall
+		return nil, cache2.ErrRestShouldNotBeCall
 	}
 
 	// already stopped
@@ -43,7 +44,7 @@ func (q *queue) Rest() ([]interface{}, error) {
 func (q *queue) addElementToHeader(e interface{}) error {
 
 	if !q.Alive() {
-		return cache.ErrContainerAlreadyClosed
+		return cache2.ErrContainerAlreadyClosed
 	}
 	q.store.PushFront(e)
 	return nil
@@ -53,7 +54,7 @@ func (q *queue) addElementToHeader(e interface{}) error {
 func (q *queue) addElementToTail(e interface{}) error {
 
 	if !q.Alive() {
-		return cache.ErrContainerAlreadyClosed
+		return cache2.ErrContainerAlreadyClosed
 	}
 	q.store.PushBack(e)
 	return nil
@@ -63,12 +64,12 @@ func (q *queue) addElementToTail(e interface{}) error {
 func (q *queue) getElementFromHeader() (interface{}, error) {
 
 	if !q.Alive() {
-		return nil, cache.ErrContainerAlreadyClosed
+		return nil, cache2.ErrContainerAlreadyClosed
 	}
 
 	e := q.store.Front()
 	if e == nil {
-		return nil, cache.ErrContainerEmpty
+		return nil, cache2.ErrContainerEmpty
 	}
 	return q.store.Remove(e), nil
 }
@@ -77,12 +78,12 @@ func (q *queue) getElementFromHeader() (interface{}, error) {
 func (q *queue) getElementFromTail() (interface{}, error) {
 
 	if !q.Alive() {
-		return nil, cache.ErrContainerAlreadyClosed
+		return nil, cache2.ErrContainerAlreadyClosed
 	}
 
 	e := q.store.Back()
 	if e == nil {
-		return nil, cache.ErrContainerEmpty
+		return nil, cache2.ErrContainerEmpty
 	}
 	return q.store.Remove(e), nil
 }
@@ -120,7 +121,7 @@ func (q *queue) DeQueueFromTail() (interface{}, error) {
 	return q.getElementFromTail()
 }
 
-func NewDeQueue(ctx context.Context) cache.DoubleEndQueue {
+func NewDeQueue(ctx context.Context) cache2.DoubleEndQueue {
 
 	return &queue{
 		LifeCycle: cache.NewLifeCycle(ctx),
@@ -135,7 +136,7 @@ type blockQueue struct {
 	burstChecker cache.BurstChecker
 }
 
-func NewBlockDeQueue(ctx context.Context, checker cache.BurstChecker) cache.DoubleEndQueue {
+func NewBlockDeQueue(ctx context.Context, checker cache.BurstChecker) cache2.DoubleEndQueue {
 
 	out := &blockQueue{
 		queue: queue{

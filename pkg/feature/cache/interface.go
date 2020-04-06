@@ -25,7 +25,7 @@ type Interface interface {
 	// stop notify chan
 	Done() <-chan struct{}
 
-	// every goroutine can got the rest element from the stopped store
+	// every goroutine can got the restclient element from the stopped store
 	Rest() ([]interface{}, error)
 
 	// read current length of the container

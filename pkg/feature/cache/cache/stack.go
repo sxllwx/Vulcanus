@@ -3,9 +3,10 @@ package cache
 import (
 	"container/list"
 	"context"
+	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 	"sync"
 
-	"github.com/sxllwx/vulcanus/pkg/cache"
+	"github.com/sxllwx/vulcanus/pkg/feature/cachere/cache"
 )
 
 type stack struct {
@@ -28,7 +29,7 @@ func (s *stack) Len() (int, error) {
 func (s *stack) Rest() ([]interface{}, error) {
 
 	if s.Alive() {
-		return nil, cache.ErrRestShouldNotBeCall
+		return nil, cache2.ErrRestShouldNotBeCall
 	}
 
 	// already stopped
@@ -51,7 +52,7 @@ func (s *stack) Push(e interface{}) error {
 func (s *stack) pushElement(e interface{}) error {
 
 	if !s.Alive() {
-		return cache.ErrContainerAlreadyClosed
+		return cache2.ErrContainerAlreadyClosed
 	}
 	s.store.PushBack(e)
 	return nil
@@ -61,14 +62,14 @@ func (s *stack) pushElement(e interface{}) error {
 func (s *stack) popElement() (interface{}, error) {
 
 	if !s.Alive() {
-		return nil, cache.ErrContainerAlreadyClosed
+		return nil, cache2.ErrContainerAlreadyClosed
 	}
 
 	out := s.store.Back()
 	if out != nil {
 		return s.store.Remove(out), nil
 	}
-	return nil, cache.ErrContainerEmpty
+	return nil, cache2.ErrContainerEmpty
 }
 
 func (s *stack) Pop() (interface{}, error) {
@@ -79,7 +80,7 @@ func (s *stack) Pop() (interface{}, error) {
 	return s.popElement()
 }
 
-func NewStack(ctx context.Context) cache.Stack {
+func NewStack(ctx context.Context) cache2.Stack {
 
 	return &stack{
 		LifeCycle: cache.NewLifeCycle(ctx),
@@ -94,7 +95,7 @@ type blockStack struct {
 	burstChecker cache.BurstChecker
 }
 
-func NewBlockStack(ctx context.Context, checker cache.BurstChecker) cache.Stack {
+func NewBlockStack(ctx context.Context, checker cache.BurstChecker) cache2.Stack {
 
 	out := &blockStack{
 		stack: stack{

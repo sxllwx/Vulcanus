@@ -1,10 +1,11 @@
 package cache
 
 import (
+	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 	"sync"
 	"time"
 
-	"github.com/sxllwx/vulcanus/pkg/cache"
+	"github.com/sxllwx/vulcanus/pkg/feature/cachere/cache"
 )
 
 type entry struct {
@@ -25,7 +26,7 @@ func (s *kvStore) Put(k string, v []byte) error {
 	defer s.lock.Unlock()
 
 	if !s.Alive() {
-		return cache.ErrContainerAlreadyClosed
+		return cache2.ErrContainerAlreadyClosed
 	}
 
 	s.store[k] = &entry{
@@ -40,11 +41,11 @@ func (s *kvStore) Get(k string) ([]byte, error) {
 	defer s.lock.RUnlock()
 
 	if !s.Alive() {
-		return nil, cache.ErrContainerAlreadyClosed
+		return nil, cache2.ErrContainerAlreadyClosed
 	}
 	out, ok := s.store[k]
 	if !ok {
-		return nil, cache.ErrNotFound
+		return nil, cache2.ErrNotFound
 	}
 	return out.data, nil
 }
@@ -55,7 +56,7 @@ func (s *kvStore) Delete(k string) error {
 	defer s.lock.Unlock()
 
 	if !s.Alive() {
-		return cache.ErrContainerAlreadyClosed
+		return cache2.ErrContainerAlreadyClosed
 	}
 
 	delete(s.store, k)
@@ -82,7 +83,7 @@ func (s *kvStore) TTL(k string, ttl time.Duration) error {
 
 	out, ok := s.store[k]
 	if !ok {
-		return cache.ErrNotFound
+		return cache2.ErrNotFound
 	}
 
 	// stop old timer
@@ -116,7 +117,7 @@ func (s *kvStore) TTL(k string, ttl time.Duration) error {
 func (s *kvStore) Rest() ([]interface{}, error) {
 
 	if s.Alive() {
-		return nil, cache.ErrRestShouldNotBeCall
+		return nil, cache2.ErrRestShouldNotBeCall
 	}
 
 	// TODO
