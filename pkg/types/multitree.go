@@ -1,28 +1,34 @@
 package types
 
+import (
+	"encoding/json"
+)
+
 // MultiTree
+// support json marshal&&unmarshal the tree to store
 type MultiTree struct {
 
 	// Tree Root
-	Root *MultiTree
+	Root *MultiTree `json:"-"`
 	// Parent Node
-	Parent *MultiTree
+	Parent *MultiTree `json:"-"`
 
 	// actual object
-	Item interface{}
+	Item interface{} `json:"item"`
 
 	// tree dep
 	// shared all node in the tree
-	Depth *uint32
+	Depth *uint32 `json:"depth"`
 
 	// current node depth
-	CurrentDepth uint32
+	CurrentDepth uint32 `json:"current_depth"`
 
 	// children list
 	// if children-list is nil, this a leaf
-	ChildrenList []*MultiTree
+	ChildrenList []*MultiTree `json:"children_list"`
 }
 
+// NewMultiTree
 func NewMultiTree(item interface{}) *MultiTree {
 
 	var dep uint32
@@ -36,6 +42,8 @@ func NewMultiTree(item interface{}) *MultiTree {
 	return n
 }
 
+// Insert
+// insert a element for spec tree
 func (n *MultiTree) Insert(item interface{}) *MultiTree {
 
 	cn := &MultiTree{
@@ -81,16 +89,22 @@ func (n *MultiTree) breadthTraversalChildrenList(f func(*MultiTree)) {
 	}
 }
 
+// BreadthFirstVisitChildrenList
+// bread first visit children
 func (n *MultiTree) BreadthFirstVisitChildrenList(f func(*MultiTree)) {
 	n.breadthTraversalChildrenList(f)
 }
 
+// DeepFirstVisitChildrenList
+// deep first visit children
 func (n *MultiTree) DeepFirstVisitChildrenList(f func(*MultiTree)) {
 	for _, c := range n.ChildrenList {
 		c.deepTraversalChildrenList(f)
 	}
 }
 
+// VisitParent
+// Visit a tree node parent
 func (n *MultiTree) VisitParent(f func(*MultiTree)) {
 
 	if n.Parent == nil {
@@ -100,4 +114,43 @@ func (n *MultiTree) VisitParent(f func(*MultiTree)) {
 
 	f(n.Parent)
 	n.Parent.VisitParent(f)
+}
+
+// UnmarshalJSON
+// recover from a snapshot,
+func (n *MultiTree) UnmarshalJSON(data []byte) error {
+
+	type tmp MultiTree
+
+	t := &tmp{}
+	if err := json.Unmarshal(data, t); err != nil {
+		return err
+	}
+
+	*n = MultiTree(*t)
+	n.rebase()
+	return nil
+}
+
+// rebase
+// json.Unmarshal lost origin message, rebase will rich origin info
+// must call by root
+func (n *MultiTree) rebase() {
+
+	n.Root = n // re pointer to self
+	n.rebaseChildrenList()
+}
+
+// rebaseChildrenList
+// child method for rebase,
+// recursive rich tree info
+func (n *MultiTree) rebaseChildrenList() {
+
+	for _, c := range n.ChildrenList {
+
+		c.Root = n.Root // pointer to root
+		c.Parent = n
+
+		c.rebaseChildrenList()
+	}
 }

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"testing"
 )
 
@@ -23,12 +24,12 @@ func TestMultiTree(t *testing.T) {
 	breadth, deep := 0, 0
 
 	root.BreadthFirstVisitChildrenList(func(n *MultiTree) {
-		t.Logf("current node is (%s)  current-deep (%d) total-deep (%d)", n.Item, n.CurrentDepth, *n.Depth)
+		t.Logf("breadth-first visit node is (%s)  current-deep (%d) total-deep (%d)", n.Item, n.CurrentDepth, *n.Depth)
 		breadth++
 	})
 
 	root.DeepFirstVisitChildrenList(func(n *MultiTree) {
-		t.Logf("(%s) deep (%d)", n.Item, n.CurrentDepth)
+		t.Logf("deep-first visit node is (%s)  current-deep (%d) total-deep (%d)", n.Item, n.CurrentDepth, *n.Depth)
 		deep++
 	})
 
@@ -39,5 +40,19 @@ func TestMultiTree(t *testing.T) {
 	last.VisitParent(func(tree *MultiTree) {
 		t.Logf("parent (%s) deep (%d) ", tree.Item, tree.CurrentDepth)
 	})
+
+	result, err := json.MarshalIndent(root, " ", " ")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("%s", result)
+
+	o := NewMultiTree(nil)
+	if err := json.Unmarshal(result, o); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(o)
 
 }
