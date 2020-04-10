@@ -12,7 +12,8 @@ type MultiTree struct {
 	Item interface{}
 
 	// tree dep
-	Depth uint32
+	// shared all node in the tree
+	Depth *uint32
 
 	// current node depth
 	CurrentDepth uint32
@@ -24,8 +25,11 @@ type MultiTree struct {
 
 func NewMultiTree(item interface{}) *MultiTree {
 
+	var dep uint32
+
 	n := &MultiTree{
-		Item: item,
+		Item:  item,
+		Depth: &dep,
 	}
 	n.Root = n     // pointer to self
 	n.Parent = nil // no parent
@@ -39,11 +43,12 @@ func (n *MultiTree) Insert(item interface{}) *MultiTree {
 		Parent:       n,
 		Item:         item,
 		CurrentDepth: n.CurrentDepth + 1,
+		Depth:        n.Depth,
 	}
 
-	if n.Root.Depth < cn.CurrentDepth {
+	if *n.Root.Depth < cn.CurrentDepth {
 		// update root depth
-		n.Root.Depth = cn.CurrentDepth
+		*n.Root.Depth = cn.CurrentDepth
 	}
 
 	n.ChildrenList = append(n.ChildrenList, cn)

@@ -23,7 +23,7 @@ func TestMultiTree(t *testing.T) {
 	breadth, deep := 0, 0
 
 	root.BreadthFirstVisitChildrenList(func(n *MultiTree) {
-		t.Logf("(%s) deep (%d)", n.Item, n.CurrentDepth)
+		t.Logf("current node is (%s)  current-deep (%d) total-deep (%d)", n.Item, n.CurrentDepth, *n.Depth)
 		breadth++
 	})
 
