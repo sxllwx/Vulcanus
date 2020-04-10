@@ -1,4 +1,4 @@
-package types
+package tree
 
 import (
 	"encoding/json"
@@ -55,4 +55,12 @@ func TestMultiTree(t *testing.T) {
 
 	t.Log(o)
 
+	d := 0
+	o.BreadthFirstVisitChildrenList(func(tree *MultiTree) {
+		d++
+	})
+
+	if d != deep {
+		t.Fatal("unmarshal fail")
+	}
 }

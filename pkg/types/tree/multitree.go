@@ -1,11 +1,11 @@
-package types
+package tree
 
 import (
 	"encoding/json"
 )
 
 // MultiTree
-// support json marshal&&unmarshal the tree to store
+// support json marshal && unmarshal the tree to store
 type MultiTree struct {
 
 	// Tree Root
