@@ -5,30 +5,41 @@ import (
 	"testing"
 )
 
+func newNode(id string, name string) interface{} {
+
+	return struct {
+		ID   string
+		Name string
+	}{
+		ID:   id,
+		Name: name,
+	}
+}
+
 func TestMultiTree(t *testing.T) {
 
-	root := NewMultiTree("0-0")
+	root := NewMultiTree(newNode("root", "scott"))
 
-	c11 := root.Insert("1-1")
-	root.Insert("1-2")
+	c11 := root.Insert(newNode("dep-1", "scott-1-1"))
+	root.Insert(newNode("dep-1", "scott-1-2"))
 
-	c21 := c11.Insert("2-1")
-	c11.Insert("2-2")
+	c21 := c11.Insert(newNode("dep-2", "scott-2-1"))
+	c11.Insert(newNode("dep-2", "scott-2-2"))
 
-	c21.Insert("3-1")
-	c32 := c21.Insert("3-2")
+	c21.Insert(newNode("dep-3", "scott-3-1"))
+	c32 := c21.Insert(newNode("dep-3", "scott-3-2"))
 
-	c32.Insert("4-1")
-	last := c32.Insert("4-2")
+	c32.Insert(newNode("dep-4", "scott-4-1"))
+	last := c32.Insert(newNode("dep-4", "4-2"))
 
 	breadth, deep := 0, 0
 
-	root.BreadthFirstVisitChildrenList(func(n *MultiTree) {
+	root.BreadthFirstTraverseChildrenList(func(n *MultiTree) {
 		t.Logf("breadth-first visit node is (%s)  current-deep (%d) total-deep (%d)", n.Item, n.CurrentDepth, *n.Depth)
 		breadth++
 	})
 
-	root.DeepFirstVisitChildrenList(func(n *MultiTree) {
+	root.DeepFirstTraverseChildrenList(func(n *MultiTree) {
 		t.Logf("deep-first visit node is (%s)  current-deep (%d) total-deep (%d)", n.Item, n.CurrentDepth, *n.Depth)
 		deep++
 	})
@@ -56,7 +67,7 @@ func TestMultiTree(t *testing.T) {
 	t.Log(o)
 
 	d := 0
-	o.BreadthFirstVisitChildrenList(func(tree *MultiTree) {
+	o.BreadthFirstTraverseChildrenList(func(tree *MultiTree) {
 		d++
 	})
 

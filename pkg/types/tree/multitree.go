@@ -64,19 +64,19 @@ func (n *MultiTree) Insert(item interface{}) *MultiTree {
 	return cn
 }
 
-// deep-first traversal
-func (n *MultiTree) deepTraversalChildrenList(f func(*MultiTree)) {
+// deep-first traverse
+func (n *MultiTree) deepTraverseChildrenList(f func(*MultiTree)) {
 
 	f(n)
 
 	for _, c := range n.ChildrenList {
-		c.deepTraversalChildrenList(f)
+		c.deepTraverseChildrenList(f)
 	}
 
 }
 
-// breadth-first traversal
-func (n *MultiTree) breadthTraversalChildrenList(f func(*MultiTree)) {
+// breadth-first traverse
+func (n *MultiTree) breadthTraverseChildrenList(f func(*MultiTree)) {
 
 	// 1. visit child first
 	for _, c := range n.ChildrenList {
@@ -85,21 +85,21 @@ func (n *MultiTree) breadthTraversalChildrenList(f func(*MultiTree)) {
 
 	// 2. recursive visit child's child
 	for _, c := range n.ChildrenList {
-		c.breadthTraversalChildrenList(f)
+		c.breadthTraverseChildrenList(f)
 	}
 }
 
-// BreadthFirstVisitChildrenList
+// BreadthFirstTraverseChildrenList
 // bread first visit children
-func (n *MultiTree) BreadthFirstVisitChildrenList(f func(*MultiTree)) {
-	n.breadthTraversalChildrenList(f)
+func (n *MultiTree) BreadthFirstTraverseChildrenList(f func(*MultiTree)) {
+	n.breadthTraverseChildrenList(f)
 }
 
-// DeepFirstVisitChildrenList
-// deep first visit children
-func (n *MultiTree) DeepFirstVisitChildrenList(f func(*MultiTree)) {
+// DeepFirstTraverseChildrenList
+// deep first traverse children
+func (n *MultiTree) DeepFirstTraverseChildrenList(f func(*MultiTree)) {
 	for _, c := range n.ChildrenList {
-		c.deepTraversalChildrenList(f)
+		c.deepTraverseChildrenList(f)
 	}
 }
 
