@@ -103,9 +103,9 @@ func (n *MultiTree) DeepFirstTraverseChildrenList(f func(*MultiTree)) {
 	}
 }
 
-// VisitParent
-// Visit a tree node parent
-func (n *MultiTree) VisitParent(f func(*MultiTree)) {
+// TraverseParent
+// Traverse a tree node parent
+func (n *MultiTree) TraverseParent(f func(*MultiTree)) {
 
 	if n.Parent == nil {
 		// already is root
@@ -113,7 +113,7 @@ func (n *MultiTree) VisitParent(f func(*MultiTree)) {
 	}
 
 	f(n.Parent)
-	n.Parent.VisitParent(f)
+	n.Parent.TraverseParent(f)
 }
 
 // UnmarshalJSON

@@ -48,7 +48,7 @@ func TestMultiTree(t *testing.T) {
 		t.Fatal("travese fail")
 	}
 
-	last.VisitParent(func(tree *MultiTree) {
+	last.TraverseParent(func(tree *MultiTree) {
 		t.Logf("parent (%s) deep (%d) ", tree.Item, tree.CurrentDepth)
 	})
 
