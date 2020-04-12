@@ -45,7 +45,7 @@ func TestMultiTree(t *testing.T) {
 	})
 
 	if deep != breadth {
-		t.Fatal("travese fail")
+		t.Fatal("traverse fail")
 	}
 
 	last.TraverseParent(func(tree *MultiTree) {
