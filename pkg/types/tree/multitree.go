@@ -1,6 +1,7 @@
 package tree
 
 import (
+	"container/list"
 	"encoding/json"
 )
 
@@ -29,7 +30,7 @@ type MultiTree struct {
 
 	// all nodes of tree
 	// read node fast path
-	Nodes *[]*MultiTree `json:"-"`
+	Nodes *list.List `json:"-"`
 }
 
 // NewMultiTree
@@ -37,16 +38,14 @@ func NewMultiTree(item interface{}) *MultiTree {
 
 	var dep uint32
 
-	nodes := make([]*MultiTree, 0)
-
 	n := &MultiTree{
 		Item:  item,
 		Depth: &dep,
-		Nodes: &nodes,
+		Nodes: list.New(),
 	}
-	n.Root = n                     // pointer to self
-	n.Parent = nil                 // no parent
-	*n.Nodes = append(*n.Nodes, n) // put self to nodes
+	n.Root = n     // pointer to self
+	n.Parent = nil // no parent
+	n.Nodes.PushBack(n)
 	return n
 }
 
@@ -69,7 +68,7 @@ func (n *MultiTree) Insert(item interface{}) *MultiTree {
 	}
 
 	n.ChildrenList = append(n.ChildrenList, cn)
-	*cn.Nodes = append(*cn.Nodes, cn) // put self to nodes
+	cn.Nodes.PushBack(cn) // put self to nodes
 	return cn
 }
 
@@ -152,10 +151,11 @@ func (n *MultiTree) UnmarshalJSON(data []byte) error {
 // must call by root
 func (n *MultiTree) rebase() {
 
-	nodes := []*MultiTree{n}
 	n.Root = n // re pointer to self
-	n.Nodes = &nodes
+	n.Nodes = list.New()
+	n.Nodes.PushBack(n)
 	n.rebaseChildrenList()
+
 }
 
 // rebaseChildrenList
@@ -168,7 +168,7 @@ func (n *MultiTree) rebaseChildrenList() {
 		c.Root = n.Root // pointer to root
 		c.Parent = n
 		c.Nodes = n.Nodes
-		*c.Nodes = append(*c.Nodes, c)
+		c.Nodes.PushBack(c)
 
 		c.rebaseChildrenList()
 	}
