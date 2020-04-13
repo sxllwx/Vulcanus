@@ -77,10 +77,4 @@ func TestMultiTree(t *testing.T) {
 	if d != deep {
 		t.Fatal("unmarshal fail")
 	}
-
-	for e := o.Nodes.Front(); e != nil; e = e.Next() {
-		// do something with e.Value
-
-		t.Logf("the child (%#v)", e.Value)
-	}
 }
