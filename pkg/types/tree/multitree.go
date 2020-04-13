@@ -26,6 +26,10 @@ type MultiTree struct {
 	// children list
 	// if children-list is nil, this a leaf
 	ChildrenList []*MultiTree `json:"children_list"`
+
+	// all nodes of tree
+	// read node fast path
+	Nodes *[]*MultiTree `json:"-"`
 }
 
 // NewMultiTree
@@ -33,12 +37,16 @@ func NewMultiTree(item interface{}) *MultiTree {
 
 	var dep uint32
 
+	nodes := make([]*MultiTree, 0)
+
 	n := &MultiTree{
 		Item:  item,
 		Depth: &dep,
+		Nodes: &nodes,
 	}
-	n.Root = n     // pointer to self
-	n.Parent = nil // no parent
+	n.Root = n                     // pointer to self
+	n.Parent = nil                 // no parent
+	*n.Nodes = append(*n.Nodes, n) // put self to nodes
 	return n
 }
 
@@ -52,6 +60,7 @@ func (n *MultiTree) Insert(item interface{}) *MultiTree {
 		Item:         item,
 		CurrentDepth: n.CurrentDepth + 1,
 		Depth:        n.Depth,
+		Nodes:        n.Nodes,
 	}
 
 	if *n.Root.Depth < cn.CurrentDepth {
@@ -60,7 +69,7 @@ func (n *MultiTree) Insert(item interface{}) *MultiTree {
 	}
 
 	n.ChildrenList = append(n.ChildrenList, cn)
-
+	*cn.Nodes = append(*cn.Nodes, cn) // put self to nodes
 	return cn
 }
 
@@ -143,7 +152,9 @@ func (n *MultiTree) UnmarshalJSON(data []byte) error {
 // must call by root
 func (n *MultiTree) rebase() {
 
+	nodes := []*MultiTree{n}
 	n.Root = n // re pointer to self
+	n.Nodes = &nodes
 	n.rebaseChildrenList()
 }
 
@@ -156,6 +167,8 @@ func (n *MultiTree) rebaseChildrenList() {
 
 		c.Root = n.Root // pointer to root
 		c.Parent = n
+		c.Nodes = n.Nodes
+		*c.Nodes = append(*c.Nodes, c)
 
 		c.rebaseChildrenList()
 	}
