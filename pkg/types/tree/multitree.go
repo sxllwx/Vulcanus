@@ -65,9 +65,11 @@ func (n *MultiTree) Insert(item interface{}) *MultiTree {
 }
 
 // deep-first traverse
-func (n *MultiTree) deepTraverseChildrenList(f func(*MultiTree)) {
+func (n *MultiTree) deepTraverseChildrenList(f func(*MultiTree) bool) {
 
-	f(n)
+	if f(n) {
+		return
+	}
 
 	for _, c := range n.ChildrenList {
 		c.deepTraverseChildrenList(f)
@@ -76,11 +78,13 @@ func (n *MultiTree) deepTraverseChildrenList(f func(*MultiTree)) {
 }
 
 // breadth-first traverse
-func (n *MultiTree) breadthTraverseChildrenList(f func(*MultiTree)) {
+func (n *MultiTree) breadthTraverseChildrenList(f func(*MultiTree) bool) {
 
 	// 1. visit child first
 	for _, c := range n.ChildrenList {
-		f(c)
+		if f(c) {
+			return
+		}
 	}
 
 	// 2. recursive visit child's child
@@ -91,13 +95,13 @@ func (n *MultiTree) breadthTraverseChildrenList(f func(*MultiTree)) {
 
 // BreadthFirstTraverseChildrenList
 // bread first visit children
-func (n *MultiTree) BreadthFirstTraverseChildrenList(f func(*MultiTree)) {
+func (n *MultiTree) BreadthFirstTraverseChildrenList(f func(*MultiTree) bool) {
 	n.breadthTraverseChildrenList(f)
 }
 
 // DeepFirstTraverseChildrenList
 // deep first traverse children
-func (n *MultiTree) DeepFirstTraverseChildrenList(f func(*MultiTree)) {
+func (n *MultiTree) DeepFirstTraverseChildrenList(f func(*MultiTree) bool) {
 	for _, c := range n.ChildrenList {
 		c.deepTraverseChildrenList(f)
 	}
@@ -105,14 +109,16 @@ func (n *MultiTree) DeepFirstTraverseChildrenList(f func(*MultiTree)) {
 
 // TraverseParent
 // Traverse a tree node parent
-func (n *MultiTree) TraverseParent(f func(*MultiTree)) {
+func (n *MultiTree) TraverseParent(f func(*MultiTree) bool) {
 
 	if n.Parent == nil {
 		// already is root
 		return
 	}
 
-	f(n.Parent)
+	if f(n.Parent) {
+		return
+	}
 	n.Parent.TraverseParent(f)
 }
 

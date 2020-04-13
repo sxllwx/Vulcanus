@@ -34,22 +34,25 @@ func TestMultiTree(t *testing.T) {
 
 	breadth, deep := 0, 0
 
-	root.BreadthFirstTraverseChildrenList(func(n *MultiTree) {
+	root.BreadthFirstTraverseChildrenList(func(n *MultiTree) bool {
 		t.Logf("breadth-first visit node is (%s)  current-deep (%d) total-deep (%d)", n.Item, n.CurrentDepth, *n.Depth)
 		breadth++
+		return false
 	})
 
-	root.DeepFirstTraverseChildrenList(func(n *MultiTree) {
+	root.DeepFirstTraverseChildrenList(func(n *MultiTree) bool {
 		t.Logf("deep-first visit node is (%s)  current-deep (%d) total-deep (%d)", n.Item, n.CurrentDepth, *n.Depth)
 		deep++
+		return false
 	})
 
 	if deep != breadth {
 		t.Fatal("traverse fail")
 	}
 
-	last.TraverseParent(func(tree *MultiTree) {
+	last.TraverseParent(func(tree *MultiTree) bool {
 		t.Logf("parent (%s) deep (%d) ", tree.Item, tree.CurrentDepth)
+		return false
 	})
 
 	result, err := json.MarshalIndent(root, " ", " ")
@@ -58,7 +61,6 @@ func TestMultiTree(t *testing.T) {
 	}
 
 	t.Logf("%s", result)
-
 	o := NewMultiTree(nil)
 	if err := json.Unmarshal(result, o); err != nil {
 		t.Fatal(err)
@@ -67,8 +69,9 @@ func TestMultiTree(t *testing.T) {
 	t.Log(o)
 
 	d := 0
-	o.BreadthFirstTraverseChildrenList(func(tree *MultiTree) {
+	o.BreadthFirstTraverseChildrenList(func(tree *MultiTree) bool {
 		d++
+		return false
 	})
 
 	if d != deep {
