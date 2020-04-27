@@ -49,6 +49,10 @@ func (r *defaultMeasurableSuite) stop() {
 	r.cancel()
 }
 
+func (r *defaultMeasurableSuite) Done() <-chan struct{} {
+	return r.ctx.Done()
+}
+
 func newMeasurableSuite() *defaultMeasurableSuite {
 
 	ctx, cancel := context.WithCancel(context.Background())

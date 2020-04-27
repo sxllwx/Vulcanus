@@ -22,6 +22,9 @@ type measurable interface {
 	// calculate the metric
 	addTotal(uint64)
 	stop()
+
+	// Done
+	Done() <-chan struct{}
 }
 
 type MeasurableReadWriteCloser interface {
