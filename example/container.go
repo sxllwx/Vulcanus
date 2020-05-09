@@ -29,8 +29,8 @@ func NewContainer() *restful.Container {
 func RegisterOpenAPI(c *restful.Container) {
 
 	config := restfulspec.Config{
-		WebServices: c.RegisteredWebServices(), // you control what services are visible
-		APIPath:     "/apidocs.json",
+		WebServices:                   c.RegisteredWebServices(), // you control what services are visible
+		APIPath:                       "/apidocs.json",
 		PostBuildSwaggerObjectHandler: richSwaggerDoc,
 	}
 	c.Add(restfulspec.NewOpenAPIService(config))
