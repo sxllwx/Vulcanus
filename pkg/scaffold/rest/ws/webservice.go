@@ -2,8 +2,9 @@ package ws
 
 import (
 	"bytes"
-	"github.com/sxllwx/vulcanus/pkg/scaffold"
 	"text/template"
+
+	"github.com/sxllwx/vulcanus/pkg/scaffold"
 
 	"github.com/pkg/errors"
 	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"

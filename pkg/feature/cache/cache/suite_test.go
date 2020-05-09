@@ -2,10 +2,11 @@ package cache
 
 import (
 	"context"
-	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 	"net/http"
 	_ "net/http/pprof"
 	"testing"
+
+	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

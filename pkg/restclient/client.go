@@ -1,9 +1,10 @@
 package restclient
 
 import (
-	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
+
+	"github.com/pkg/errors"
 )
 
 type RESTClient struct {

@@ -1,8 +1,9 @@
 package watch
 
 import (
-	"github.com/pkg/errors"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 type FullChannelBehavior int

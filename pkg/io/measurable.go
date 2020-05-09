@@ -191,3 +191,31 @@ func (c *conn) Close() error {
 
 	return c.Conn.Close()
 }
+
+// MeasurableTCPDialer
+// Dial address use tcp, but got a MeasurableConn
+func MeasurableTCPDialer(ctx context.Context, address string) (net.Conn, error) {
+
+	var (
+		out net.Conn
+		err error
+	)
+
+	c := make(chan struct{})
+
+	go func() {
+		out, err = net.Dial("tcp", address)
+		close(c)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return nil, context.DeadlineExceeded
+	case <-c:
+
+		if err != nil {
+			return nil, err
+		}
+		return DecorateConn(out), nil
+	}
+}

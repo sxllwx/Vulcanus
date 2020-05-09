@@ -1,9 +1,10 @@
 package container
 
 import (
-	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"
 	"io/ioutil"
 	"testing"
+
+	"github.com/sxllwx/vulcanus/pkg/scaffold/rest"
 )
 
 func TestContainer(t *testing.T) {

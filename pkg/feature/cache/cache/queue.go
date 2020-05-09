@@ -3,8 +3,9 @@ package cache
 import (
 	"container/list"
 	"context"
-	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 	"sync"
+
+	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 
 	"github.com/sxllwx/vulcanus/pkg/feature/cachere/cache"
 )

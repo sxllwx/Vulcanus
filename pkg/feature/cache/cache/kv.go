@@ -1,9 +1,10 @@
 package cache
 
 import (
-	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 	"sync"
 	"time"
+
+	cache2 "github.com/sxllwx/vulcanus/pkg/feature/cache"
 
 	"github.com/sxllwx/vulcanus/pkg/feature/cachere/cache"
 )
