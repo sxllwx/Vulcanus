@@ -9,45 +9,41 @@ import (
 )
 
 type ConnTracker struct {
+
+	// config
 	rwTimeout time.Duration
+	ticker    *time.Ticker
 
-	ticker *time.Ticker
-
-	mu sync.RWMutex
-
-	connMap map[net.Conn]*statusConn
+	// tracked conn
+	mu      sync.RWMutex
+	connMap map[*statusConn]struct{}
 }
 
 func NewConnTracker(cleanInterval time.Duration, rwTimeout time.Duration) *ConnTracker {
 
 	return &ConnTracker{
-		rwTimeout: 0,
+		rwTimeout: rwTimeout,
 		ticker:    time.NewTicker(cleanInterval),
-		connMap:   make(map[net.Conn]*statusConn, 8),
+		connMap:   make(map[*statusConn]struct{}, 8),
 	}
 }
 
-// track cnn
-func (c *ConnTracker) track(conn net.Conn) net.Conn {
+// track conn
+func (c *ConnTracker) track(conn *statusConn) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	_, ok := c.connMap[conn]
 	if ok {
-		return nil
+		return
 	}
 
-	sc := &statusConn{
-		Conn:    conn,
-		tracker: c,
-	}
-	c.connMap[conn] = sc
-	return sc
+	c.connMap[conn] = struct{}{}
 }
 
-// untrack conn
-func (c *ConnTracker) unTrack(conn net.Conn) {
+// untracked conn
+func (c *ConnTracker) unTrack(conn *statusConn) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -64,13 +60,21 @@ func (c *ConnTracker) Dial(network string, addr string, dialFunc func(string, st
 	if err != nil {
 		return nil, err
 	}
+	return c.trackNetConn(conn), nil
+}
 
-	c.track(conn)
-	return conn, nil
+func (c *ConnTracker) trackNetConn(conn net.Conn) *statusConn {
+
+	sc := &statusConn{
+		Conn:    conn,
+		tracker: c,
+	}
+	c.track(sc)
+	return sc
 }
 
 func (c *ConnTracker) Track(conn net.Conn) net.Conn {
-	return c.track(conn)
+	return c.trackNetConn(conn)
 }
 
 func (c *ConnTracker) Start() {
@@ -93,7 +97,7 @@ func (c *ConnTracker) Stop() {
 func (c *ConnTracker) resetDeadline() {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	for _, conn := range c.connMap {
+	for conn := range c.connMap {
 		if err := conn.SetDeadline(conn.latestRWTime.Add(c.rwTimeout)); err != nil {
 			log.Warnf("set conn deadline %v", err)
 		}

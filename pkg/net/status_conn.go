@@ -39,6 +39,6 @@ func (c *statusConn) Write(b []byte) (int, error) {
 }
 
 func (c *statusConn) Close() (err error) {
-	c.tracker.unTrack(c.Conn)
+	c.tracker.unTrack(c)
 	return c.Conn.Close()
 }
