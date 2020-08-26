@@ -28,14 +28,14 @@ func NewConnTracker(cleanInterval time.Duration, rwTimeout time.Duration) *ConnT
 }
 
 // track cnn
-func (c *ConnTracker) track(conn net.Conn) {
+func (c *ConnTracker) track(conn net.Conn) net.Conn {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	_, ok := c.connMap[conn]
 	if ok {
-		return
+		return nil
 	}
 
 	sc := &statusConn{
@@ -43,6 +43,7 @@ func (c *ConnTracker) track(conn net.Conn) {
 		tracker: c,
 	}
 	c.connMap[conn] = sc
+	return sc
 }
 
 // untrack conn
@@ -69,8 +70,7 @@ func (c *ConnTracker) Dial(network string, addr string, dialFunc func(string, st
 }
 
 func (c *ConnTracker) Track(conn net.Conn) net.Conn {
-	c.track(conn)
-	return conn
+	return c.track(conn)
 }
 
 func (c *ConnTracker) Start() {
